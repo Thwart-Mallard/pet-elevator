@@ -21,7 +21,9 @@ A Raspberry Pi 4B drives a NEMA 23 stepper motor via a DM542T driver. A single P
 | Kart power | 5W solar panel + 18650 LiPo + MPPT controller |
 | Safety inputs | 2× NC limit switches, NC latching e-stop |
 
-Full wiring diagram: [`wiring/wiring_diagram.svg`](wiring/wiring_diagram.svg)
+![Wiring Diagram](docs/wiring_diagram.png)
+
+Full wiring diagram (zoomable SVG): [`wiring/wiring_diagram.svg`](wiring/wiring_diagram.svg)
 
 ---
 
