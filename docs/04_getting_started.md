@@ -3,14 +3,14 @@
 ## Prerequisites
 
 - All hardware assembled and wired per `wiring/wiring_diagram.svg`
-- Raspberry Pi 4 running Raspberry Pi OS (Bookworm or later)
-- Two Raspberry Pi Zero 2 W, each with a CSI camera module fitted
-- Home WiFi network — all three Pis on the same network
+- Raspberry Pi 4B running Raspberry Pi OS (Bookworm or later)
+- One Raspberry Pi Zero 2 W with CSI camera module fitted, mounted on the kart
+- Home WiFi network — both Pis on the same network
 - 24V PSU **not yet connected** for initial software setup
 
 ---
 
-## Pi 4 Setup
+## Pi 4B Setup
 
 ### 1. Install system dependencies
 
@@ -38,13 +38,13 @@ cd /home/pi/pet-elevator
 Or copy the project directory by other means. The working directory should be
 `/home/pi/pet-elevator` (adjustable in the systemd service file).
 
-### 3. Set the Pi 4 hostname (optional but recommended)
+### 3. Set the Pi 4B hostname (optional but recommended)
 
 ```bash
 sudo raspi-config   # → System Options → Hostname → pet-elevator
 ```
 
-Camera nodes resolve the broker at `pet-elevator.local` by default.
+The kart camera node resolves the broker at `pet-elevator.local` by default.
 
 ### 4. Install the systemd service
 
@@ -58,7 +58,7 @@ Do **not** start it yet — complete the wiring checks first (Step 7).
 
 ---
 
-## Pi Zero 2 W Setup (repeat for each unit)
+## Pi Zero 2 W Setup (Kart Camera Node)
 
 ### 1. Enable the camera interface
 
@@ -87,18 +87,17 @@ unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
       -d /home/pi/pet-elevator/camera_node/models/
 ```
 
-### 4. Configure the floor identity
+### 4. Configure the broker address
 
 ```bash
 sudo cp /home/pi/pet-elevator/deploy/elevator-camera.env /etc/default/elevator-camera
 sudo nano /etc/default/elevator-camera
 ```
 
-Edit the two values:
+Set the broker hostname:
 
 ```
-ELEVATOR_FLOOR=0            # 0 for ground floor, 1 for upper floor
-ELEVATOR_BROKER=pet-elevator.local   # Pi 4 hostname or IP
+ELEVATOR_BROKER=pet-elevator.local   # Pi 4B hostname or IP
 ```
 
 ### 5. Install the systemd service
@@ -134,23 +133,22 @@ Expected output:
 Homing will fail if the GPIO pins are not connected — that is expected at this
 stage. Stop with Ctrl-C.
 
-### On each Pi Zero 2 W
+### On the Pi Zero 2 W (kart)
 
 Test detection in isolation:
 
 ```bash
-ELEVATOR_FLOOR=0 ELEVATOR_BROKER=pet-elevator.local \
-  python -m camera_node.main
+ELEVATOR_BROKER=pet-elevator.local python -m camera_node.main
 ```
 
 Hold a dog toy or a printed dog photo in front of the camera. You should see log
 lines like:
 
 ```
-2024-...  camera_node.main   INFO  Dog detected — published score=0.847 to elevator/camera/floor0/detection
+2024-...  camera_node.main   INFO  Dog detected — published score=0.847 to elevator/camera/kart/detection
 ```
 
-On the Pi 4, verify the MQTT event arrives:
+On the Pi 4B, verify the MQTT event arrives:
 
 ```bash
 mosquitto_sub -t 'elevator/#' -v
@@ -237,9 +235,9 @@ You should see:
 The connection dot goes amber and shows **reconnecting…** if the network drops —
 the page will reconnect automatically without a manual refresh.
 
-> If `pet-elevator.local` does not resolve on your network, use the Pi 4's IP
+> If `pet-elevator.local` does not resolve on your network, use the Pi 4B's IP
 > address directly: `http://192.168.x.x:8080`. Find the IP with
-> `hostname -I` on the Pi 4.
+> `hostname -I` on the Pi 4B.
 
 ### 4. Test floor control via the web UI
 
@@ -283,17 +281,17 @@ mosquitto_pub -h pet-elevator.local -t elevator/command \
 
 The platform re-homes from wherever it stopped.
 
-### 7. Start the camera services
+### 7. Start the camera service
 
-On each Pi Zero 2 W:
+On the Pi Zero 2 W:
 
 ```bash
 sudo systemctl start elevator-camera
 journalctl -u elevator-camera -f
 ```
 
-Verify detections appear in the Pi 4 logs and that the elevator responds by
-calling itself to the correct floor.
+Verify detections appear in the Pi 4B logs and that the elevator responds by
+calling itself to the floor where the dog is waiting.
 
 ---
 
@@ -316,13 +314,13 @@ At 25 mm/s, full travel (3048 mm) takes approximately **2 minutes 2 seconds**.
 ## Checking Logs
 
 ```bash
-# Pi 4 controller
+# Pi 4B controller
 journalctl -u elevator-controller -f
 
-# Pi Zero 2 W camera node
+# Pi Zero 2 W kart camera node
 journalctl -u elevator-camera -f
 
-# All MQTT traffic (from Pi 4)
+# All MQTT traffic (from Pi 4B)
 mosquitto_sub -t '#' -v
 ```
 
@@ -339,10 +337,10 @@ mosquitto_sub -t '#' -v
 | Homing overshoots, hits top limit | Bottom limit switch wiring — NC terminal must be tied to GND |
 | State stuck in `fault` after reset | Check all NC switch pins — one may still read HIGH. Inspect wiring |
 | Camera node not detecting dog | Check `journalctl -u elevator-camera`. Test model path. Hold dog image to camera |
-| Detections not reaching Pi 4 | Ping `pet-elevator.local` from Zero 2 W. Check `ELEVATOR_BROKER` in `/etc/default/elevator-camera` |
-| `pigpio` connection refused | Run `sudo systemctl start pigpiod` on the Pi 4 |
+| Detections not reaching Pi 4B | Ping `pet-elevator.local` from Zero 2 W. Check `ELEVATOR_BROKER` in `/etc/default/elevator-camera` |
+| `pigpio` connection refused | Run `sudo systemctl start pigpiod` on the Pi 4B |
 | Missed steps at speed | 3.3V optocoupler current marginal — add level-shifter to 5V |
 | Web UI not reachable | Is the service running? `sudo systemctl status elevator-controller`. Check port 8080 is not firewalled |
-| `pet-elevator.local` not resolving | Use the Pi 4 IP address directly. mDNS can be unreliable on some routers |
+| `pet-elevator.local` not resolving | Use the Pi 4B IP address directly. mDNS can be unreliable on some routers |
 | Web UI shows stale state / carriage stuck | SSE connection dropped — the dot turns amber. Refresh the page to force reconnect |
-| Emergency Stop in UI does not respond | Check controller logs: `journalctl -u elevator-controller -f`. Verify MQTT is running on Pi 4 |
+| Emergency Stop in UI does not respond | Check controller logs: `journalctl -u elevator-controller -f`. Verify MQTT is running on Pi 4B |
