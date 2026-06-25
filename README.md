@@ -67,7 +67,7 @@ http://pet-elevator.local:8080
 
 ---
 
-### Pi Zero 2 W — Kart Camera Node
+### Pi Zero 2 W — Landing Camera Nodes (repeat for each unit)
 
 ```bash
 # 1. Enable camera
@@ -87,15 +87,39 @@ unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
       detect.tflite labelmap.txt \
       -d /home/pi/pet-elevator/camera_node/models/
 
-# 4. Configure broker address
+# 4. Configure floor identity and broker
 sudo cp /home/pi/pet-elevator/deploy/elevator-camera.env /etc/default/elevator-camera
 sudo nano /etc/default/elevator-camera
+# Set ELEVATOR_FLOOR=0 (ground) or 1 (upper)
 # Set ELEVATOR_BROKER=pet-elevator.local
 
 # 5. Install and start the service
 sudo cp /home/pi/pet-elevator/deploy/elevator-camera.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now elevator-camera
+```
+
+---
+
+### Pi Zero 2 W — Kart Sensor Node
+
+```bash
+# 1. Install dependencies
+sudo apt update
+sudo apt install -y python3-paho-mqtt python3-rpi.gpio
+
+# 2. Clone the repo
+git clone https://github.com/Thwart-Mallard/pet-elevator /home/pi/pet-elevator
+
+# 3. Configure broker address
+sudo cp /home/pi/pet-elevator/deploy/elevator-kart.env /etc/default/elevator-kart
+sudo nano /etc/default/elevator-kart
+# Set ELEVATOR_BROKER=pet-elevator.local
+
+# 4. Install and start the service
+sudo cp /home/pi/pet-elevator/deploy/elevator-kart.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now elevator-kart
 ```
 
 ---
