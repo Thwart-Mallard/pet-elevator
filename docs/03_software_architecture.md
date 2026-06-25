@@ -362,8 +362,13 @@ variable so the shaft percentage is always correct without a separate config fet
 
 ```
 kart_node/main.py    KartNode
+  │  _board_timer      threading.Timer — pressure mat settle
+  │  _board_timer_lock threading.Lock
   │
-  └── config.py      GPIO pin numbers, MQTT broker, topic names
+  └── config.py      GPIO pins, timing constants, MQTT broker + topics
+                     DOOR_RELAY_OPEN_PIN / DOOR_RELAY_CLOSE_PIN
+                     DOOR_ACTUATOR_STROKE_TIME  (tune to actuator)
+                     DOG_BOARD_SETTLE_TIME      (tune to dog / mat size)
 ```
 
 ### GPIO monitoring
@@ -371,31 +376,49 @@ kart_node/main.py    KartNode
 ```
 GPIO 17 (DOOR_PIN)     — NC door switch, PUD_UP
 GPIO 27 (PRESSURE_PIN) — NO pressure mat, PUD_DOWN
+GPIO  5 (DOOR_RELAY_OPEN_PIN)  — relay IN1 output, active-LOW
+GPIO  6 (DOOR_RELAY_CLOSE_PIN) — relay IN2 output, active-LOW
 
-RPi.GPIO add_event_detect(BOTH) on each pin
+RPi.GPIO add_event_detect(BOTH) on each input pin
   → _on_door_change()     → _publish_door("open"|"closed")
-  → _on_pressure_change() → _publish_pressure(true|false)
+  → _on_pressure_change() → settle timer → _publish_pressure(true|false)
 ```
 
 Both topics are published **retained** (QoS 1) so the Pi 4B receives the current
 kart state immediately on (re)connect without waiting for a pin change.
+
+#### Pressure mat settle timer
+
+A brief step-on (dog approaches but doesn't fully board) must not trigger the
+door-close sequence. `_on_pressure_change()` therefore uses a cancellable
+`threading.Timer`:
+
+1. Mat goes **HIGH** → cancel any pending timer, start a new one for
+   `DOG_BOARD_SETTLE_TIME` seconds (default 3 s).
+2. Mat goes **LOW** before the timer fires → cancel it, publish
+   `dog_present=false` immediately.
+3. Timer fires → re-read the pin; if still HIGH, publish `dog_present=true`.
+   If it fell LOW during the sleep, discard silently.
+
+`DOG_BOARD_SETTLE_TIME` is tunable in `kart_node/config.py`.
 
 ### Door command subscription
 
 The kart node subscribes to `elevator/kart/door/command` and receives
 `{"action": "open"}` or `{"action": "close"}` from the Pi 4B web UI.
 
-The handler logs the command and calls the actuator stub. When a door
-motor, servo, or solenoid is wired up, replace the `# TODO` line in
-`kart_node/main.py` with the appropriate GPIO output call:
+The handler spawns a daemon thread that calls `_actuate_door(action)`:
 
-```python
-# e.g. for a relay on GPIO 5:
-GPIO.output(config.DOOR_ACTUATOR_PIN, GPIO.HIGH if action == "open" else GPIO.LOW)
-```
+1. De-energise the guard relay (the one *not* being used) — prevents both
+   relays ever being ON simultaneously, which would short the actuator supply.
+2. Energise the drive relay (GPIO LOW on an active-LOW module) — actuator moves.
+3. Sleep for `DOOR_ACTUATOR_STROKE_TIME` seconds (default 4 s, tunable in
+   `kart_node/config.py`). Most linear actuators have built-in end-stop
+   protection, but the timed pulse ensures the relay is never left energised.
+4. De-energise the drive relay — actuator holds position.
 
-Add `DOOR_ACTUATOR_PIN` to `kart_node/config.py` and set it up as
-`GPIO.OUT` in `_setup_gpio()` when the hardware is fitted.
+The relay module is wired for reversed polarity between the two channels so
+that RL1 extends (opens) and RL2 retracts (closes) the actuator.
 
 ### Door safety logic (enforced on Pi 4B)
 
