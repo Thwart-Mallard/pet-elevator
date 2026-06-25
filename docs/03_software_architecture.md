@@ -210,6 +210,7 @@ states. After successful re-homing the system returns to `IDLE` with
 | Subscribe | `elevator/kart/door`             | `{"status": "open"\|"closed"}` |
 | Subscribe | `elevator/kart/pressure`         | `{"dog_present": true\|false}` |
 | Publish   | `elevator/status` | `{"state": "idle", "floor": 0, "position": 0}` |
+| Publish   | `elevator/kart/door/command`     | `{"action": "open"\|"close"}` |
 
 Status is published as **QoS 1, retained** so any new subscriber (phone, Home
 Assistant, etc.) receives the current state immediately on connect.
@@ -325,6 +326,8 @@ the subscriber list cleanly.
 | `POST` | `/api/command` | `{"action":"estop"}` | Immediate stop → FAULT state |
 | `POST` | `/api/command` | `{"action":"home"}` | Trigger re-home |
 | `POST` | `/api/command` | `{"action":"reset"}` | Reset fault and re-home |
+| `POST` | `/api/door` | `{"action":"open"}` | Send door open command to kart |
+| `POST` | `/api/door` | `{"action":"close"}` | Send door close command to kart |
 
 `/api/command` publishes directly to `elevator/command` on the MQTT broker.
 The `MQTTClient` already subscribed to that topic picks it up and calls the
@@ -348,6 +351,7 @@ on any phone browser on the home network without internet access.
 | Re-home button | Enabled when state is `idle` or `fault`. |
 | Reset button | Hidden unless state is `fault`. |
 | Connection dot | Green when SSE is live, amber while reconnecting. SSE reconnects automatically on network drop. |
+| Door buttons | Open Door / Close Door in the Kart card. Publish to `elevator/kart/door/command` via `/api/door`. Kart node actuates door motor/servo when hardware is fitted. |
 
 `TOTAL_STEPS` is injected into the page at render time via a Jinja2 template
 variable so the shaft percentage is always correct without a separate config fetch.
@@ -375,6 +379,23 @@ RPi.GPIO add_event_detect(BOTH) on each pin
 
 Both topics are published **retained** (QoS 1) so the Pi 4B receives the current
 kart state immediately on (re)connect without waiting for a pin change.
+
+### Door command subscription
+
+The kart node subscribes to `elevator/kart/door/command` and receives
+`{"action": "open"}` or `{"action": "close"}` from the Pi 4B web UI.
+
+The handler logs the command and calls the actuator stub. When a door
+motor, servo, or solenoid is wired up, replace the `# TODO` line in
+`kart_node/main.py` with the appropriate GPIO output call:
+
+```python
+# e.g. for a relay on GPIO 5:
+GPIO.output(config.DOOR_ACTUATOR_PIN, GPIO.HIGH if action == "open" else GPIO.LOW)
+```
+
+Add `DOOR_ACTUATOR_PIN` to `kart_node/config.py` and set it up as
+`GPIO.OUT` in `_setup_gpio()` when the hardware is fitted.
 
 ### Door safety logic (enforced on Pi 4B)
 
