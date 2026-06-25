@@ -114,6 +114,16 @@ class WebUI:
             )
             return jsonify({"ok": True})
 
+        @app.route("/api/door", methods=["POST"])
+        def api_door():
+            data = request.get_json(force=True, silent=True)
+            if not data or data.get("action") not in ("open", "close"):
+                return jsonify({"ok": False, "error": "action must be 'open' or 'close'"}), 400
+            self._mqtt.publish(
+                config.MQTT_TOPIC_KART_DOOR_CMD, json.dumps(data), qos=1
+            )
+            return jsonify({"ok": True})
+
         @app.route("/api/events")
         def api_events():
             def stream():

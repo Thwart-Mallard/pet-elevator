@@ -40,6 +40,7 @@ MQTT_TOPIC_STATUS        = "elevator/status"           # publish:  state/positio
 MQTT_TOPIC_DETECTION     = "elevator/camera/+/detection"  # from landing Pi Zero 2 W nodes
 MQTT_TOPIC_KART_DOOR     = "elevator/kart/door"        # from kart sensor node (retained)
 MQTT_TOPIC_KART_PRESSURE = "elevator/kart/pressure"    # from kart sensor node (retained)
+MQTT_TOPIC_KART_DOOR_CMD = "elevator/kart/door/command"  # to kart: {"action": "open"|"close"}
 
 # Wiring note:
 # Common-cathode wiring — DM542T PUL-, DIR-, ENA- tied to GND; Pi GPIO drives the + sides.

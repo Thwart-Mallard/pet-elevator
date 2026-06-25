@@ -285,6 +285,21 @@ button:disabled {
 .interlock-pill.ok   { background: var(--green); }
 .interlock-pill.warn { background: var(--red); animation: pulse-red 1s ease-in-out infinite; }
 .interlock-pill.info { background: var(--blue); }
+
+.door-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.btn-door {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 9px;
+  border-radius: 8px;
+}
 </style>
 </head>
 <body>
@@ -325,6 +340,10 @@ button:disabled {
   <div class="interlock-row">
     <span class="interlock-label">🐾 Pressure mat</span>
     <span class="interlock-pill" id="pressure-pill">—</span>
+  </div>
+  <div class="door-btns">
+    <button class="btn-door" onclick="doorCmd('open')">↑ Open Door</button>
+    <button class="btn-door" onclick="doorCmd('close')">↓ Close Door</button>
   </div>
 </div>
 
@@ -414,6 +433,14 @@ function updateUI(s) {
 }
 
 function goFloor(floor) { cmd({ action: 'go', floor }); }
+
+function doorCmd(action) {
+  fetch('/api/door', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ action }),
+  }).catch(() => {});
+}
 
 function cmd(payload) {
   fetch('/api/command', {

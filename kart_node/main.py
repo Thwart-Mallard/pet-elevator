@@ -106,13 +106,32 @@ class KartNode:
     @staticmethod
     def _init_mqtt() -> mqtt.Client:
         client = mqtt.Client(client_id="elevator-kart", clean_session=True)
-        client.on_connect    = lambda c, u, f, rc: logger.info(
-            "MQTT connected to %s (rc=%d)", config.MQTT_BROKER, rc
+        client.on_connect    = lambda c, u, f, rc: (
+            logger.info("MQTT connected to %s (rc=%d)", config.MQTT_BROKER, rc),
+            client.subscribe(config.MQTT_TOPIC_DOOR_CMD, qos=1),
         )
         client.on_disconnect = lambda c, u, rc: logger.warning(
             "MQTT disconnected (rc=%d)", rc
         )
+        client.on_message = KartNode._on_mqtt_message
         return client
+
+    @staticmethod
+    def _on_mqtt_message(client, userdata, msg) -> None:
+        try:
+            payload = json.loads(msg.payload)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            logger.warning("Unparseable message on %s: %r", msg.topic, msg.payload)
+            return
+
+        if msg.topic == config.MQTT_TOPIC_DOOR_CMD:
+            action = payload.get("action")
+            if action not in ("open", "close"):
+                logger.warning("Unknown door command action: %r", action)
+                return
+            logger.info("Door command received: %s", action)
+            # TODO: actuate door motor/servo on GPIO when hardware is fitted
+            # e.g. GPIO.output(config.DOOR_ACTUATOR_PIN, GPIO.HIGH if action == "open" else GPIO.LOW)
 
     def _publish_door(self, status: str) -> None:
         payload = json.dumps({"status": status})

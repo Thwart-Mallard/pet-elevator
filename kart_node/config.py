@@ -12,5 +12,6 @@ PRESSURE_PIN = 27
 # ── MQTT ──────────────────────────────────────────────────────────────────
 MQTT_BROKER           = os.environ.get("ELEVATOR_BROKER", "pet-elevator.local")
 MQTT_PORT             = 1883
-MQTT_TOPIC_DOOR       = "elevator/kart/door"      # retained
-MQTT_TOPIC_PRESSURE   = "elevator/kart/pressure"  # retained
+MQTT_TOPIC_DOOR       = "elevator/kart/door"           # retained
+MQTT_TOPIC_PRESSURE   = "elevator/kart/pressure"       # retained
+MQTT_TOPIC_DOOR_CMD   = "elevator/kart/door/command"   # subscribe: {"action": "open"|"close"}
