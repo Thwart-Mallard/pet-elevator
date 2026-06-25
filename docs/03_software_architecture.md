@@ -4,13 +4,14 @@
 
 The software is split across two Python packages:
 
-- **`controller/`** — runs on the Raspberry Pi 4. Owns the stepper motor, reads
-  safety switches, maintains the elevator state machine, runs an MQTT broker
-  (Mosquitto), and serves a local web UI for manual control.
+- **`controller/`** — runs on the Raspberry Pi 4B (fixed, mains-powered). Owns
+  the stepper motor, reads safety switches, maintains the elevator state machine,
+  runs an MQTT broker (Mosquitto), and serves a local web UI for manual control.
 
-- **`camera_node/`** — runs on each Pi Zero 2 W. Captures frames from the CSI
-  camera, runs on-device TFLite inference, and publishes detection events to the
-  Pi 4's MQTT broker over WiFi.
+- **`camera_node/`** — runs on the single Pi Zero 2 W mounted on the elevator
+  kart (solar + battery powered). Captures frames from the CSI camera, runs
+  on-device TFLite inference, and publishes detection events to the Pi 4B's MQTT
+  broker over WiFi.
 
 ---
 
@@ -73,7 +74,7 @@ contains magic numbers.
 | `MQTT_PORT`           | 1883     |                                              |
 | `MQTT_TOPIC_COMMAND`  | `elevator/command` | Inbound floor commands          |
 | `MQTT_TOPIC_STATUS`   | `elevator/status`  | Outbound state updates          |
-| `MQTT_TOPIC_DETECTION`| `elevator/camera/+/detection` | Camera node events    |
+| `MQTT_TOPIC_DETECTION`| `elevator/camera/kart/detection` | Kart camera events |
 
 ---
 
@@ -200,7 +201,7 @@ states. After successful re-homing the system returns to `IDLE` with
 | Subscribe | `elevator/command` | `{"action": "go", "floor": 0}` |
 | Subscribe | `elevator/command` | `{"action": "home"}` |
 | Subscribe | `elevator/command` | `{"action": "reset"}` |
-| Subscribe | `elevator/camera/+/detection` | `{"floor": 0, "confidence": 0.92}` |
+| Subscribe | `elevator/camera/kart/detection` | `{"floor": 0, "confidence": 0.92}` |
 | Publish   | `elevator/status` | `{"state": "idle", "floor": 0, "position": 0}` |
 
 Status is published as **QoS 1, retained** so any new subscriber (phone, Home
@@ -334,9 +335,9 @@ variable so the shaft percentage is always correct without a separate config fet
 
 ---
 
-## Mosquitto broker (Pi 4)
+## Mosquitto broker (Pi 4B)
 
-Mosquitto runs as a system service on the Pi 4 and listens on port 1883.
+Mosquitto runs as a system service on the Pi 4B and listens on port 1883.
 No authentication is configured for the local network. If the elevator is
 accessible from untrusted networks, add a password file:
 

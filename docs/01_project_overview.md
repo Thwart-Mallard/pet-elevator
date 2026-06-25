@@ -14,20 +14,23 @@ via MQTT from any device on the home network.
 ### What is built
 
 - Vertical cable-winch lift driven by a NEMA 23 stepper motor and 10:1 gearbox
-- Raspberry Pi 4 as the master controller — runs the state machine, motor control,
-  safety monitoring, and an MQTT broker
-- Two Pi Zero 2 W camera nodes, one at each floor landing — run on-device TFLite
-  dog detection and publish detections over WiFi to the Pi 4
+- Raspberry Pi 4B as the master controller — runs the state machine, motor control,
+  safety monitoring, an MQTT broker, and a web UI
+- Single Pi Zero 2 W camera node mounted on the elevator kart — runs on-device
+  TFLite dog detection and publishes detections over WiFi to the Pi 4B
+- Pi Zero 2 W powered by an onboard solar panel and LiPo battery (no mains wiring
+  to the moving kart)
 - Full safety system: two NC limit switches, NC latching e-stop, homing on boot
 - systemd services so everything starts automatically on power-on
 
 ### How it works
 
-1. On boot the Pi 4 homes the carriage to the ground floor limit switch.
-2. Camera nodes watch their respective landings continuously.
-3. When a node detects the dog with ≥ 80% confidence it publishes a detection event
-   to the MQTT broker on the Pi 4.
-4. The Pi 4 state machine calls the elevator to that floor.
+1. On boot the Pi 4B homes the carriage to the ground floor limit switch.
+2. The kart camera node watches continuously for the dog as the elevator visits
+   each floor.
+3. When the dog is detected with ≥ 80% confidence it publishes a detection event
+   to the MQTT broker on the Pi 4B.
+4. The Pi 4B state machine calls the elevator to that floor.
 5. Manual floor commands can also be sent via MQTT from any home-network device.
 
 ---
@@ -44,7 +47,13 @@ The Pi 4 runs a real Linux OS, which gives:
 
 The ESP32 prototyped the V1 concept; the Pi 4 is the production platform.
 
-### Why Pi Zero 2 W for camera nodes?
+### Why a single Pi Zero 2 W on the kart (not one per landing)?
+
+Mounting the camera on the kart eliminates fixed-landing camera wiring entirely.
+The kart visits every floor, so one camera covers all landings. The Zero 2 W is
+powered by a small onboard solar panel and LiPo battery — no mains wiring runs to
+the moving platform. The outdoor location (~6 hours direct sun/day) provides ample
+charge headroom (~30 Wh/day available vs ~15 Wh/day consumed).
 
 The Zero 2 W has a quad-core ARM Cortex-A53, enough to run TFLite MobileNet SSD
 inference at ~1 fps without sending video off-device. This keeps:
@@ -109,7 +118,8 @@ is irrelevant.
 | Homing speed        | 5 mm/s                          |
 | Acceleration        | 8 mm/s² (gentle for dog comfort)|
 | Motor supply        | 24 V DC, min 5 A (120 W)        |
-| Logic supply        | 5 V / 3 A USB-C (Pi 4)          |
+| Logic supply (Pi 4B)| 5 V / 3 A USB-C                 |
+| Kart supply         | 5W solar + 18650 LiPo (Pi Zero) |
 
 ---
 

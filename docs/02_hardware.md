@@ -18,14 +18,17 @@
 | 1   | NC latching e-stop button         | Prominent red mushroom head, accessible to handler |
 | —   | Wire, ferrule connectors          | Use ferrules on stepper motor wires                |
 
-### Camera Nodes (×2, one per floor)
+### Kart Camera Node
 
 | Qty | Component                         | Notes                                              |
 |-----|-----------------------------------|----------------------------------------------------|
-| 2   | Raspberry Pi Zero 2 W             | One per landing                                    |
-| 2   | Raspberry Pi Camera Module 3      | Standard CSI ribbon connector                      |
-| 2   | 5V / 2.5A micro-USB supply        | One per Zero 2 W                                   |
-| 2   | Camera enclosure / mount          | Weatherproof if near an exterior door              |
+| 1   | Raspberry Pi Zero 2 W             | Mounted on elevator kart                           |
+| 1   | Raspberry Pi Camera Module 3      | Standard CSI ribbon connector                      |
+| 1   | 5W monocrystalline solar panel    | Mounted on kart; outdoor use, ~6 hr direct sun/day |
+| 1   | CN3791 MPPT charge controller     | Or Waveshare Solar Power Manager D (combined board)|
+| 1   | 18650 LiPo cell, ~3000 mAh        | ~1 day buffer on overcast                          |
+| 1   | 5V / 2A boost converter           | LiPo → Pi Zero (omit if using combined board)      |
+| 1   | Weatherproof enclosure for kart   | Houses Pi Zero, battery, charge board              |
 
 ---
 
