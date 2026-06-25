@@ -164,12 +164,13 @@ Test door switch and pressure mat in isolation:
 ELEVATOR_BROKER=pet-elevator.local python -m kart_node.main
 ```
 
-Open and close the door, then stand on the pressure mat. You should see:
+Open and close the door, then stand on the pressure mat for 3+ seconds.
+You should see:
 
 ```bash
 mosquitto_sub -h pet-elevator.local -t 'elevator/kart/#' -v
 # elevator/kart/door     {"status": "closed"}
-# elevator/kart/pressure {"dog_present": false}
+# elevator/kart/pressure {"dog_present": true}   ← after 3 s settle delay
 ```
 
 ---
@@ -377,10 +378,30 @@ elevator/kart/door {"status": "open"}
 elevator/kart/door {"status": "closed"}
 ```
 
-Place a weight on the pressure mat:
+Place a weight on the pressure mat and hold it for at least 3 seconds
+(the default `DOG_BOARD_SETTLE_TIME`). The kart node log shows:
+```
+Pressure mat held — confirming in 3.0s
+Dog fully aboard (settle complete)
+```
+Then the retained message arrives:
 ```
 elevator/kart/pressure {"dog_present": true}
 ```
+Remove the weight and `dog_present: false` publishes immediately.
+
+To test the door relay (if wired), send an open command from the Pi 4B:
+```bash
+mosquitto_pub -h pet-elevator.local -t elevator/kart/door/command \
+  -m '{"action": "open"}'
+```
+The kart log should show:
+```
+Door command received: open
+Door actuator open complete
+```
+And the relay output on GPIO 5 will pulse LOW for `DOOR_ACTUATOR_STROKE_TIME`
+seconds (default 4 s) before returning HIGH.
 
 ### 6. Start the kart service
 
@@ -396,12 +417,14 @@ journalctl -u elevator-kart -f
 All motion parameters are in `controller/config.py`. Restart the service after
 any change.
 
-| Want | Parameter | Edit |
-|------|-----------|------|
-| Lift faster | `MAX_SPEED_MM_S` | Increase (careful — test empty first) |
-| Gentler start/stop | `ACCEL_MM_S2` | Decrease |
-| Quieter homing | `HOMING_SPEED_MM_S` | Decrease |
-| Elevator responds to lower-confidence detections | `DETECTION_CONFIDENCE_THRESHOLD` in `mqtt_client.py` | Decrease (min 0.50) |
+| Want | Parameter | File | Edit |
+|------|-----------|------|------|
+| Lift faster | `MAX_SPEED_MM_S` | `controller/config.py` | Increase (test empty first) |
+| Gentler start/stop | `ACCEL_MM_S2` | `controller/config.py` | Decrease |
+| Quieter homing | `HOMING_SPEED_MM_S` | `controller/config.py` | Decrease |
+| Lower detection threshold | `DETECTION_CONFIDENCE_THRESHOLD` | `controller/mqtt_client.py` | Decrease (min 0.50) |
+| Door actuator stroke time | `DOOR_ACTUATOR_STROKE_TIME` | `kart_node/config.py` | Set to actuator full-travel time + 0.5 s margin |
+| Pressure mat settle delay | `DOG_BOARD_SETTLE_TIME` | `kart_node/config.py` | Increase if false triggers; decrease if dog boards slowly |
 
 At 25 mm/s, full travel (3048 mm) takes approximately **2 minutes 2 seconds**.
 
@@ -440,6 +463,9 @@ mosquitto_sub -t '#' -v
 | Elevator won't move — door blocked | Pi 4B received `kart_door: open`. Check door switch wiring on kart. Check `mosquitto_sub -t 'elevator/kart/door' -v` |
 | Kart sensor not publishing | Check `journalctl -u elevator-kart` on kart Pi Zero. Verify `ELEVATOR_BROKER` in `/etc/default/elevator-kart` |
 | Pressure mat not triggering | Check GPIO 27 wiring — one terminal to 3.3V, other to GPIO 27. Verify with `mosquitto_sub -t 'elevator/kart/pressure' -v` |
+| `dog_present` never goes `true` | Mat may be releasing before settle timer fires — hold it still for `DOG_BOARD_SETTLE_TIME` seconds (default 3 s). Check kart log for "Pressure mat held" message |
+| Door relay does not actuate | Check GPIO 5/6 wiring to relay IN1/IN2. Verify relay module VCC connected to kart Pi Zero 5V and GND shared. Confirm command arrived: `mosquitto_sub -t 'elevator/kart/door/command' -v` |
+| Door relay stays on / actuator jams | `DOOR_ACTUATOR_STROKE_TIME` too long for your actuator — reduce until relay de-energises before end-stop is reached |
 | `pigpio` connection refused | Run `sudo systemctl start pigpiod` on the Pi 4B |
 | Missed steps at speed | 3.3V optocoupler current marginal — add level-shifter to 5V |
 | Web UI not reachable | Is the service running? `sudo systemctl status elevator-controller`. Check port 8080 is not firewalled |
