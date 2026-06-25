@@ -342,8 +342,8 @@ button:disabled {
     <span class="interlock-pill" id="pressure-pill">—</span>
   </div>
   <div class="door-btns">
-    <button class="btn-door" onclick="doorCmd('open')">↑ Open Door</button>
-    <button class="btn-door" onclick="doorCmd('close')">↓ Close Door</button>
+    <button class="btn-door" id="btn-door-open"  onclick="doorCmd('open')">↑ Open Door</button>
+    <button class="btn-door" id="btn-door-close" onclick="doorCmd('close')">↓ Close Door</button>
   </div>
 </div>
 
@@ -425,11 +425,14 @@ function updateUI(s) {
   }
 
   // Buttons
-  const idle = s.state === 'idle';
+  const idle    = s.state === 'idle';
+  const moving  = ['moving', 'homing'].includes(s.state);
   document.getElementById('btn-f1').disabled    = !idle || s.floor === 1;
   document.getElementById('btn-f0').disabled    = !idle || s.floor === 0;
   document.getElementById('btn-home').disabled  = !['idle','fault'].includes(s.state);
   document.getElementById('btn-reset').hidden   = s.state !== 'fault';
+  document.getElementById('btn-door-open').disabled  = moving;
+  document.getElementById('btn-door-close').disabled = moving;
 }
 
 function goFloor(floor) { cmd({ action: 'go', floor }); }
