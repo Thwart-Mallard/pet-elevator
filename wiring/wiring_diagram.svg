@@ -8,7 +8,7 @@
 <text x="700" y="28" text-anchor="middle" fill="#f1f5f9"
       font-family="system-ui,sans-serif" font-size="16" font-weight="bold">Pet Elevator — Wiring Diagram v2</text>
 <text x="700" y="46" text-anchor="middle" fill="#475569"
-      font-family="system-ui,sans-serif" font-size="10">Raspberry Pi 4 · DM542T · NEMA 23 + 10:1 Gearbox · 24V DC  |  All safety switches NC — HIGH = fault (wire-break safe)</text>
+      font-family="system-ui,sans-serif" font-size="10">Raspberry Pi 4B · DM542T · NEMA 23 + 10:1 Gearbox · 24V DC  |  Pi Zero 2 W on kart (solar) · All safety switches NC — HIGH = fault (wire-break safe)</text>
 
 <!-- ═══ LEGEND ═══ -->
 <rect x="1060" y="58" width="318" height="252" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
@@ -18,7 +18,7 @@
 <line x1="1074" y1="113" x2="1118" y2="113" stroke="#475569" stroke-width="3"/>
 <text x="1128" y="117" fill="#f1f5f9" font-size="11">GND / Power return</text>
 <line x1="1074" y1="133" x2="1118" y2="133" stroke="#f97316" stroke-width="2"/>
-<text x="1128" y="137" fill="#f1f5f9" font-size="11">5V (Pi 4 supply)</text>
+<text x="1128" y="137" fill="#f1f5f9" font-size="11">5V (Pi 4B supply)</text>
 <line x1="1074" y1="153" x2="1118" y2="153" stroke="#3b82f6" stroke-width="2"/>
 <text x="1128" y="157" fill="#f1f5f9" font-size="11">STEP (GPIO 18)</text>
 <line x1="1074" y1="173" x2="1118" y2="173" stroke="#22c55e" stroke-width="2"/>
@@ -65,29 +65,22 @@
 <text x="140" y="403" text-anchor="middle" fill="#94a3b8" font-size="10">pet-elevator.local:8080</text>
 <text x="140" y="419" text-anchor="middle" fill="#475569" font-size="9">Flask · SSE real-time updates</text>
 
-<!-- Pi Zero 2 W — Floor 0 -->
-<rect x="40" y="440" width="200" height="82" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
-<text x="140" y="460" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">Pi Zero 2 W  (Floor 0)</text>
+<!-- Pi Zero 2 W — Kart Camera Node -->
+<rect x="40" y="440" width="200" height="122" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
+<text x="140" y="460" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">Pi Zero 2 W  (Kart)</text>
 <text x="140" y="476" text-anchor="middle" fill="#94a3b8" font-size="10">CSI camera · TFLite MobileNet SSD</text>
-<text x="140" y="491" text-anchor="middle" fill="#475569" font-size="9">ELEVATOR_FLOOR=0</text>
-<text x="140" y="506" text-anchor="middle" fill="#475569" font-size="9">publishes: elevator/camera/floor0/detection</text>
+<text x="140" y="491" text-anchor="middle" fill="#22c55e" font-size="9">5W solar + 18650 LiPo — no mains</text>
+<text x="140" y="506" text-anchor="middle" fill="#475569" font-size="9">MPPT charge controller · 5V boost</text>
+<text x="140" y="521" text-anchor="middle" fill="#475569" font-size="9">ELEVATOR_BROKER=pet-elevator.local</text>
+<text x="140" y="536" text-anchor="middle" fill="#475569" font-size="9">publishes: elevator/camera/kart/detection</text>
 
-<!-- Pi Zero 2 W — Floor 1 -->
-<rect x="40" y="548" width="200" height="82" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
-<text x="140" y="568" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">Pi Zero 2 W  (Floor 1)</text>
-<text x="140" y="584" text-anchor="middle" fill="#94a3b8" font-size="10">CSI camera · TFLite MobileNet SSD</text>
-<text x="140" y="599" text-anchor="middle" fill="#475569" font-size="9">ELEVATOR_FLOOR=1</text>
-<text x="140" y="614" text-anchor="middle" fill="#475569" font-size="9">publishes: elevator/camera/floor1/detection</text>
-
-<!-- WiFi/MQTT arrows -->
-<line x1="240" y1="481" x2="375" y2="481" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,3"/>
-<line x1="240" y1="589" x2="375" y2="540" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,3"/>
-<text x="295" y="473" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="9" font-style="italic">WiFi · MQTT →</text>
-<text x="295" y="579" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="9" font-style="italic">WiFi · MQTT →</text>
+<!-- WiFi/MQTT arrow — kart to Pi 4B -->
+<line x1="240" y1="501" x2="378" y2="501" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,3"/>
+<text x="305" y="493" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="9" font-style="italic">WiFi · MQTT →</text>
 
 <!-- ═══ RASPBERRY PI 4 ═══ -->
 <rect x="380" y="58" width="248" height="620" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
-<text x="504" y="80" text-anchor="middle" fill="#3b82f6" font-family="system-ui,sans-serif" font-size="13" font-weight="bold">Raspberry Pi 4</text>
+<text x="504" y="80" text-anchor="middle" fill="#3b82f6" font-family="system-ui,sans-serif" font-size="13" font-weight="bold">Raspberry Pi 4B</text>
 <text x="504" y="96" text-anchor="middle" fill="#475569" font-size="9">3.3V GPIO logic · pigpio daemon</text>
 <text x="504" y="110" text-anchor="middle" fill="#475569" font-size="9">Mosquitto MQTT broker · Python controller</text>
 <text x="504" y="124" text-anchor="middle" fill="#f59e0b" font-size="9">Flask Web UI · port 8080</text>
@@ -284,6 +277,6 @@
 <text x="72" y="841" fill="#f1f5f9" font-size="10">ENA+ LOW = motor enabled (holding torque). ENA+ HIGH = disabled (free-wheel)</text>
 
 <text x="56" y="858" fill="#3b82f6" font-size="11">ℹ</text>
-<text x="72" y="858" fill="#f1f5f9" font-size="10">Pi Zero 2 W units powered independently (5V micro-USB) — no motor supply connection</text>
+<text x="72" y="858" fill="#f1f5f9" font-size="10">Pi Zero 2 W (kart) powered by 5W solar + 18650 LiPo via MPPT — no mains to moving kart</text>
 
 </svg>
