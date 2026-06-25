@@ -4,6 +4,8 @@ A two-floor cable-winch lift for an ageing dog with mobility difficulties.
 
 A Raspberry Pi 4 drives a NEMA 23 stepper motor via a DM542T driver. Two Pi Zero 2 W camera nodes watch each landing and call the elevator automatically when the dog is detected. Everything is controllable from a browser on the home network.
 
+![Web UI](docs/web_ui_screenshot.png)
+
 ---
 
 ## Hardware
