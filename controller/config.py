@@ -32,12 +32,14 @@ FLOOR_POSITIONS = {
     1: TOTAL_STEPS,  # Upper floor
 }
 
-# MQTT (broker runs on this Pi 4)
-MQTT_BROKER         = "localhost"
-MQTT_PORT           = 1883
-MQTT_TOPIC_COMMAND  = "elevator/command"   # subscribe: {"floor": 0|1}
-MQTT_TOPIC_STATUS   = "elevator/status"    # publish:  state/position
-MQTT_TOPIC_DETECTION = "elevator/camera/+/detection"  # from Zero 2 W nodes
+# MQTT (broker runs on this Pi 4B)
+MQTT_BROKER              = "localhost"
+MQTT_PORT                = 1883
+MQTT_TOPIC_COMMAND       = "elevator/command"          # subscribe: {"action": ..., "floor": 0|1}
+MQTT_TOPIC_STATUS        = "elevator/status"           # publish:  state/position/kart
+MQTT_TOPIC_DETECTION     = "elevator/camera/+/detection"  # from landing Pi Zero 2 W nodes
+MQTT_TOPIC_KART_DOOR     = "elevator/kart/door"        # from kart sensor node (retained)
+MQTT_TOPIC_KART_PRESSURE = "elevator/kart/pressure"    # from kart sensor node (retained)
 
 # Wiring note:
 # Common-cathode wiring — DM542T PUL-, DIR-, ENA- tied to GND; Pi GPIO drives the + sides.

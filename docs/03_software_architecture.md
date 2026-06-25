@@ -2,16 +2,19 @@
 
 ## Overview
 
-The software is split across two Python packages:
+The software is split across three Python packages:
 
 - **`controller/`** — runs on the Raspberry Pi 4B (fixed, mains-powered). Owns
   the stepper motor, reads safety switches, maintains the elevator state machine,
   runs an MQTT broker (Mosquitto), and serves a local web UI for manual control.
 
-- **`camera_node/`** — runs on the single Pi Zero 2 W mounted on the elevator
-  kart (solar + battery powered). Captures frames from the CSI camera, runs
-  on-device TFLite inference, and publishes detection events to the Pi 4B's MQTT
-  broker over WiFi.
+- **`camera_node/`** — runs on each of the two landing Pi Zero 2 W units (fixed,
+  mains-powered, one per floor). Captures frames from the CSI camera, runs
+  on-device TFLite inference, and publishes dog detection events over WiFi.
+
+- **`kart_node/`** — runs on the kart Pi Zero 2 W (solar + battery, no camera).
+  Monitors a door NC switch and a pressure mat NO switch via GPIO and publishes
+  their state as retained MQTT messages over WiFi.
 
 ---
 
@@ -74,7 +77,9 @@ contains magic numbers.
 | `MQTT_PORT`           | 1883     |                                              |
 | `MQTT_TOPIC_COMMAND`  | `elevator/command` | Inbound floor commands          |
 | `MQTT_TOPIC_STATUS`   | `elevator/status`  | Outbound state updates          |
-| `MQTT_TOPIC_DETECTION`| `elevator/camera/kart/detection` | Kart camera events |
+| `MQTT_TOPIC_DETECTION`    | `elevator/camera/+/detection`  | Landing camera detections  |
+| `MQTT_TOPIC_KART_DOOR`    | `elevator/kart/door`           | Kart door state (retained) |
+| `MQTT_TOPIC_KART_PRESSURE`| `elevator/kart/pressure`       | Kart pressure mat (retained)|
 
 ---
 
@@ -201,7 +206,9 @@ states. After successful re-homing the system returns to `IDLE` with
 | Subscribe | `elevator/command` | `{"action": "go", "floor": 0}` |
 | Subscribe | `elevator/command` | `{"action": "home"}` |
 | Subscribe | `elevator/command` | `{"action": "reset"}` |
-| Subscribe | `elevator/camera/kart/detection` | `{"floor": 0, "confidence": 0.92}` |
+| Subscribe | `elevator/camera/+/detection`    | `{"floor": 0, "confidence": 0.92}` |
+| Subscribe | `elevator/kart/door`             | `{"status": "open"\|"closed"}` |
+| Subscribe | `elevator/kart/pressure`         | `{"dog_present": true\|false}` |
 | Publish   | `elevator/status` | `{"state": "idle", "floor": 0, "position": 0}` |
 
 Status is published as **QoS 1, retained** so any new subscriber (phone, Home
@@ -221,6 +228,8 @@ so repeated detections while the elevator travels are harmless.
 | `state` | string | `boot`, `homing`, `idle`, `moving`, `fault` |
 | `floor` | int \| null | `0` = ground, `1` = upper, `null` = in transit or unknown |
 | `position` | int \| null | Steps from home (0 = ground floor) |
+| `kart_door` | string | `open`, `closed`, `unknown` (unknown = kart node not yet connected) |
+| `dog_present` | bool \| null | `true` = dog on pressure mat, `null` = kart node not yet connected |
 
 ---
 
@@ -332,6 +341,39 @@ on any phone browser on the home network without internet access.
 
 `TOTAL_STEPS` is injected into the page at render time via a Jinja2 template
 variable so the shaft percentage is always correct without a separate config fetch.
+
+---
+
+## Kart Node Module Map
+
+```
+kart_node/main.py    KartNode
+  │
+  └── config.py      GPIO pin numbers, MQTT broker, topic names
+```
+
+### GPIO monitoring
+
+```
+GPIO 17 (DOOR_PIN)     — NC door switch, PUD_UP
+GPIO 27 (PRESSURE_PIN) — NO pressure mat, PUD_DOWN
+
+RPi.GPIO add_event_detect(BOTH) on each pin
+  → _on_door_change()     → _publish_door("open"|"closed")
+  → _on_pressure_change() → _publish_pressure(true|false)
+```
+
+Both topics are published **retained** (QoS 1) so the Pi 4B receives the current
+kart state immediately on (re)connect without waiting for a pin change.
+
+### Door safety logic (enforced on Pi 4B)
+
+| Kart door state | Elevator state | Action |
+|---|---|---|
+| `open` | `idle` | `cmd_go()` blocked with log warning |
+| `open` | `moving` | Motor stopped immediately, state → `fault` |
+| `closed` | any | Normal operation |
+| `unknown` | `idle` | `cmd_go()` allowed with log warning (degraded safety) |
 
 ---
 

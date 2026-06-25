@@ -1,0 +1,47 @@
+# Pet Elevator — Pi Zero 2 W kart sensor node
+#
+# Install (run on the kart Pi Zero 2 W):
+#   1. Copy and edit the env file:
+#        sudo cp deploy/elevator-kart.env /etc/default/elevator-kart
+#        sudo nano /etc/default/elevator-kart   # set ELEVATOR_BROKER
+#
+#   2. Install the service:
+#        sudo cp deploy/elevator-kart.service /etc/systemd/system/
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable elevator-kart
+#        sudo systemctl start elevator-kart
+#
+# Logs:
+#   journalctl -u elevator-kart -f
+
+[Unit]
+Description=Pet Elevator Kart Sensor Node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+
+WorkingDirectory=/home/pi/pet-elevator
+
+EnvironmentFile=/etc/default/elevator-kart
+
+ExecStart=/usr/bin/python3 -m kart_node.main
+
+KillSignal=SIGTERM
+TimeoutStopSec=5
+
+Restart=on-failure
+RestartSec=10s
+
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=elevator-kart
+
+[Install]
+WantedBy=multi-user.target

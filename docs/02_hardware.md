@@ -18,17 +18,27 @@
 | 1   | NC latching e-stop button         | Prominent red mushroom head, accessible to handler |
 | —   | Wire, ferrule connectors          | Use ferrules on stepper motor wires                |
 
-### Kart Camera Node
+### Landing Camera Nodes (×2, one per floor)
 
 | Qty | Component                         | Notes                                              |
 |-----|-----------------------------------|----------------------------------------------------|
-| 1   | Raspberry Pi Zero 2 W             | Mounted on elevator kart                           |
-| 1   | Raspberry Pi Camera Module 3      | Standard CSI ribbon connector                      |
-| 1   | 5W monocrystalline solar panel    | Mounted on kart; outdoor use, ~6 hr direct sun/day |
+| 2   | Raspberry Pi Zero 2 W             | One per landing, fixed mount                       |
+| 2   | Raspberry Pi Camera Module 3      | Standard CSI ribbon connector                      |
+| 2   | 5V / 2.5A micro-USB supply        | One per Zero 2 W                                   |
+| 2   | Camera enclosure / mount          | Weatherproof — outdoor installation                |
+
+### Kart Sensor Node
+
+| Qty | Component                         | Notes                                              |
+|-----|-----------------------------------|----------------------------------------------------|
+| 1   | Raspberry Pi Zero 2 W             | Mounted on elevator kart — no camera               |
+| 1   | Microswitch or reed switch, NC    | Door switch — COM→GPIO17, NC→GND                   |
+| 1   | Pressure mat / contact pad, NO    | Kart floor — one terminal→3.3V, other→GPIO27       |
+| 1   | 5W monocrystalline solar panel    | Mounted on kart; outdoor, ~6 hr direct sun/day     |
 | 1   | CN3791 MPPT charge controller     | Or Waveshare Solar Power Manager D (combined board)|
 | 1   | 18650 LiPo cell, ~3000 mAh        | ~1 day buffer on overcast                          |
 | 1   | 5V / 2A boost converter           | LiPo → Pi Zero (omit if using combined board)      |
-| 1   | Weatherproof enclosure for kart   | Houses Pi Zero, battery, charge board              |
+| 1   | Weatherproof enclosure for kart   | Houses Pi Zero, battery, charge board, switches    |
 
 ---
 
@@ -62,6 +72,24 @@ Pi GPIO drives the + sides at 3.3V. The optocoupler current is ≈ 9.5 mA
 ((3.3 − 1.2) / 220Ω internal resistor). The DM542T specification minimum is 10 mA.
 This works on every DM542T tested, but if missed steps occur under load add a
 BSS138-based level-shifter board to bring GPIO signals to 5V.
+
+---
+
+## Kart Sensor Node GPIO Pin Assignment
+
+All GPIO numbers are BCM numbering. The kart Pi Zero 2 W has no camera or motor
+connections — only these two switch inputs.
+
+| BCM GPIO | Signal        | Switch wiring                                      |
+|----------|---------------|----------------------------------------------------|
+| GPIO 17  | DOOR          | COM → GPIO 17, NC terminal → GND (PUD_UP)         |
+| GPIO 27  | PRESSURE MAT  | One terminal → 3.3V, other terminal → GPIO 27 (PUD_DOWN) |
+
+**Door switch (NC):** Pin reads LOW when door is closed (normal). Pin reads HIGH
+when door opens — this is the signal the Pi 4B uses to block or fault.
+
+**Pressure mat (NO):** Pin reads LOW when the kart is empty. Pin reads HIGH when
+the dog's weight closes the mat contacts. Debounce is 200 ms in software.
 
 ---
 

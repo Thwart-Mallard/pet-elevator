@@ -16,22 +16,25 @@ via MQTT from any device on the home network.
 - Vertical cable-winch lift driven by a NEMA 23 stepper motor and 10:1 gearbox
 - Raspberry Pi 4B as the master controller — runs the state machine, motor control,
   safety monitoring, an MQTT broker, and a web UI
-- Single Pi Zero 2 W camera node mounted on the elevator kart — runs on-device
-  TFLite dog detection and publishes detections over WiFi to the Pi 4B
-- Pi Zero 2 W powered by an onboard solar panel and LiPo battery (no mains wiring
-  to the moving kart)
-- Full safety system: two NC limit switches, NC latching e-stop, homing on boot
+- Two Pi Zero 2 W camera nodes, one fixed at each floor landing — run on-device
+  TFLite dog detection and publish detections over WiFi to the Pi 4B
+- One Pi Zero 2 W kart sensor node (solar + battery, no camera) — monitors a door
+  switch and a pressure mat on the kart and publishes their state over WiFi
+- Full safety system: two NC limit switches, NC latching e-stop, NC door switch,
+  pressure mat, homing on boot
 - systemd services so everything starts automatically on power-on
 
 ### How it works
 
 1. On boot the Pi 4B homes the carriage to the ground floor limit switch.
-2. The kart camera node watches continuously for the dog as the elevator visits
-   each floor.
-3. When the dog is detected with ≥ 80% confidence it publishes a detection event
-   to the MQTT broker on the Pi 4B.
-4. The Pi 4B state machine calls the elevator to that floor.
-5. Manual floor commands can also be sent via MQTT from any home-network device.
+2. Landing camera nodes watch their respective floors continuously.
+3. When a camera detects the dog with ≥ 80% confidence it publishes a detection
+   event to the MQTT broker on the Pi 4B.
+4. The Pi 4B state machine calls the elevator to that floor — but only if the kart
+   door is confirmed closed.
+5. The dog boards the kart; the pressure mat confirms presence. The door is closed.
+6. The elevator departs to the destination floor.
+7. Manual floor commands can also be sent via MQTT from any home-network device.
 
 ---
 
@@ -47,19 +50,31 @@ The Pi 4 runs a real Linux OS, which gives:
 
 The ESP32 prototyped the V1 concept; the Pi 4 is the production platform.
 
-### Why a single Pi Zero 2 W on the kart (not one per landing)?
-
-Mounting the camera on the kart eliminates fixed-landing camera wiring entirely.
-The kart visits every floor, so one camera covers all landings. The Zero 2 W is
-powered by a small onboard solar panel and LiPo battery — no mains wiring runs to
-the moving platform. The outdoor location (~6 hours direct sun/day) provides ample
-charge headroom (~30 Wh/day available vs ~15 Wh/day consumed).
+### Why Pi Zero 2 W for the landing camera nodes?
 
 The Zero 2 W has a quad-core ARM Cortex-A53, enough to run TFLite MobileNet SSD
 inference at ~1 fps without sending video off-device. This keeps:
 - Latency low (no round-trip to a cloud API)
 - Privacy preserved (no video leaves the home network)
 - Reliability high (no cloud dependency for safety-adjacent function)
+
+### Why a separate kart sensor node (Pi Zero 2 W, solar-powered)?
+
+The landing cameras detect the dog waiting at a floor. But once the elevator
+arrives, the system needs to know two more things: is the door open or closed, and
+is the dog actually aboard? A dedicated kart Pi Zero 2 W (no camera) reads a door
+NC switch and a NO pressure mat via GPIO and publishes their state over WiFi. This
+provides two additional safety interlocks:
+
+1. **Door interlock** — the Pi 4B will not start a move while the door is open. If
+   the door opens during transit, the motor stops immediately and a fault is raised.
+2. **Boarding confirmation** — the pressure mat gives positive confirmation the dog
+   is on the kart before the door is closed and the elevator departs.
+
+The kart Pi Zero 2 W is powered by a 5W solar panel and 18650 LiPo battery — no
+mains wiring runs to the moving platform. The outdoor location (~6 hours direct
+sun/day) provides ample charge headroom (~30 Wh/day available vs ~15 Wh/day
+consumed).
 
 ### Why NEMA 23 with 75 mm drum?
 
@@ -119,7 +134,8 @@ is irrelevant.
 | Acceleration        | 8 mm/s² (gentle for dog comfort)|
 | Motor supply        | 24 V DC, min 5 A (120 W)        |
 | Logic supply (Pi 4B)| 5 V / 3 A USB-C                 |
-| Kart supply         | 5W solar + 18650 LiPo (Pi Zero) |
+| Camera node supply  | 5 V / 2.5 A micro-USB (×2)      |
+| Kart sensor supply  | 5W solar + 18650 LiPo           |
 
 ---
 

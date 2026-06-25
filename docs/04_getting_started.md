@@ -4,8 +4,9 @@
 
 - All hardware assembled and wired per `wiring/wiring_diagram.svg`
 - Raspberry Pi 4B running Raspberry Pi OS (Bookworm or later)
-- One Raspberry Pi Zero 2 W with CSI camera module fitted, mounted on the kart
-- Home WiFi network — both Pis on the same network
+- Two Raspberry Pi Zero 2 W, each with a CSI camera module fitted (one per landing)
+- One Raspberry Pi Zero 2 W for the kart sensor node (no camera)
+- Home WiFi network — all four Pis on the same network
 - 24V PSU **not yet connected** for initial software setup
 
 ---
@@ -58,7 +59,7 @@ Do **not** start it yet — complete the wiring checks first (Step 7).
 
 ---
 
-## Pi Zero 2 W Setup (Kart Camera Node)
+## Pi Zero 2 W Setup — Landing Camera Nodes (repeat for each unit)
 
 ### 1. Enable the camera interface
 
@@ -87,16 +88,17 @@ unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
       -d /home/pi/pet-elevator/camera_node/models/
 ```
 
-### 4. Configure the broker address
+### 4. Configure the floor identity
 
 ```bash
 sudo cp /home/pi/pet-elevator/deploy/elevator-camera.env /etc/default/elevator-camera
 sudo nano /etc/default/elevator-camera
 ```
 
-Set the broker hostname:
+Edit the two values:
 
 ```
+ELEVATOR_FLOOR=0            # 0 for ground floor, 1 for upper floor
 ELEVATOR_BROKER=pet-elevator.local   # Pi 4B hostname or IP
 ```
 
@@ -281,9 +283,9 @@ mosquitto_pub -h pet-elevator.local -t elevator/command \
 
 The platform re-homes from wherever it stopped.
 
-### 7. Start the camera service
+### 7. Start the camera services
 
-On the Pi Zero 2 W:
+On each landing Pi Zero 2 W:
 
 ```bash
 sudo systemctl start elevator-camera
@@ -292,6 +294,76 @@ journalctl -u elevator-camera -f
 
 Verify detections appear in the Pi 4B logs and that the elevator responds by
 calling itself to the floor where the dog is waiting.
+
+---
+
+## Pi Zero 2 W Setup — Kart Sensor Node
+
+### 1. Install dependencies
+
+```bash
+sudo apt update
+sudo apt install -y python3-paho-mqtt python3-rpi.gpio
+```
+
+### 2. Clone / copy the project
+
+```bash
+git clone https://github.com/Thwart-Mallard/pet-elevator /home/pi/pet-elevator
+```
+
+### 3. Configure the broker address
+
+```bash
+sudo cp /home/pi/pet-elevator/deploy/elevator-kart.env /etc/default/elevator-kart
+sudo nano /etc/default/elevator-kart
+```
+
+Set:
+
+```
+ELEVATOR_BROKER=pet-elevator.local   # Pi 4B hostname or IP
+```
+
+### 4. Install and enable the service
+
+```bash
+sudo cp /home/pi/pet-elevator/deploy/elevator-kart.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable elevator-kart
+```
+
+### 5. Test the sensors
+
+Before fitting the kart, verify GPIO reads correctly:
+
+```bash
+ELEVATOR_BROKER=pet-elevator.local python -m kart_node.main
+```
+
+On the Pi 4B, watch the retained messages arrive:
+
+```bash
+mosquitto_sub -h pet-elevator.local -t 'elevator/kart/#' -v
+```
+
+Open and close the door — you should see:
+```
+elevator/kart/door {"status": "open"}
+elevator/kart/door {"status": "closed"}
+```
+
+Place a weight on the pressure mat:
+```
+elevator/kart/pressure {"dog_present": true}
+```
+
+### 6. Start the kart service
+
+```bash
+sudo systemctl start elevator-kart
+journalctl -u elevator-kart -f
+```
 
 ---
 
@@ -338,6 +410,9 @@ mosquitto_sub -t '#' -v
 | State stuck in `fault` after reset | Check all NC switch pins — one may still read HIGH. Inspect wiring |
 | Camera node not detecting dog | Check `journalctl -u elevator-camera`. Test model path. Hold dog image to camera |
 | Detections not reaching Pi 4B | Ping `pet-elevator.local` from Zero 2 W. Check `ELEVATOR_BROKER` in `/etc/default/elevator-camera` |
+| Elevator won't move — door blocked | Pi 4B received `kart_door: open`. Check door switch wiring on kart. Check `mosquitto_sub -t 'elevator/kart/door' -v` |
+| Kart sensor not publishing | Check `journalctl -u elevator-kart` on kart Pi Zero. Verify `ELEVATOR_BROKER` in `/etc/default/elevator-kart` |
+| Pressure mat not triggering | Check GPIO 27 wiring — one terminal to 3.3V, other to GPIO 27. Verify with `mosquitto_sub -t 'elevator/kart/pressure' -v` |
 | `pigpio` connection refused | Run `sudo systemctl start pigpiod` on the Pi 4B |
 | Missed steps at speed | 3.3V optocoupler current marginal — add level-shifter to 5V |
 | Web UI not reachable | Is the service running? `sudo systemctl status elevator-controller`. Check port 8080 is not firewalled |

@@ -2,7 +2,7 @@
 
 A two-floor cable-winch lift for an ageing dog with mobility difficulties.
 
-A Raspberry Pi 4B drives a NEMA 23 stepper motor via a DM542T driver. A single Pi Zero 2 W mounted on the elevator kart — powered by an onboard solar panel and LiPo battery — detects the dog and calls the elevator automatically. Everything is controllable from a browser on the home network.
+A Raspberry Pi 4B drives a NEMA 23 stepper motor via a DM542T driver. Two Pi Zero 2 W camera nodes at each landing detect the dog and call the elevator automatically. A third Pi Zero 2 W on the kart (solar powered) monitors a door switch and pressure mat for boarding confirmation and safety interlocks. Everything is controllable from a browser on the home network.
 
 ![Web UI](docs/web_ui_screenshot.png)
 
@@ -17,9 +17,10 @@ A Raspberry Pi 4B drives a NEMA 23 stepper motor via a DM542T driver. A single P
 | Driver | DM542T (1/16 microstep, 24 V) |
 | Gearbox | 10:1 worm gear (self-locking) |
 | Drum | 75 mm diameter |
-| Camera node | Raspberry Pi Zero 2 W + CSI camera (on kart) |
-| Kart power | 5W solar panel + 18650 LiPo + MPPT controller |
-| Safety inputs | 2× NC limit switches, NC latching e-stop |
+| Landing cameras | Raspberry Pi Zero 2 W × 2 + CSI camera (one per floor) |
+| Kart sensor node | Raspberry Pi Zero 2 W (solar + LiPo, no camera) |
+| Kart sensors | NC door switch (GPIO 17) + NO pressure mat (GPIO 27) |
+| Safety inputs | 2× NC limit switches, NC latching e-stop, NC door switch |
 
 ![Wiring Diagram](docs/wiring_diagram.png)
 
@@ -110,7 +111,9 @@ All messages are JSON. Broker runs on the Pi 4B (port 1883).
 | `elevator/command` | → controller | `{"action": "estop"}` |
 | `elevator/command` | → controller | `{"action": "reset"}` |
 | `elevator/status` | ← controller | `{"state": "idle", "floor": 1, "position": 413906}` |
-| `elevator/camera/kart/detection` | ← kart camera | `{"score": 0.91, "floor": 0}` |
+| `elevator/camera/floor0/detection` | ← landing camera | `{"floor": 0, "confidence": 0.91}` |
+| `elevator/kart/door` | ← kart sensor | `{"status": "closed"}` |
+| `elevator/kart/pressure` | ← kart sensor | `{"dog_present": true}` |
 
 Send a command from any machine on the network:
 
@@ -135,7 +138,8 @@ pet-elevator/
 │   ├── templates/
 │   │   └── index.html   # Mobile-friendly control interface
 │   └── main.py          # Entry point
-├── camera_node/         # Pi Zero 2 W (kart, solar-powered) — TFLite dog detection
+├── camera_node/         # Pi Zero 2 W ×2 (landing, mains) — TFLite dog detection
+├── kart_node/           # Pi Zero 2 W (kart, solar) — door switch + pressure mat
 │   ├── config.py
 │   ├── detector.py
 │   └── main.py

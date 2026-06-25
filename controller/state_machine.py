@@ -33,6 +33,9 @@ class ElevatorFSM:
         self.state = State.BOOT
         self.current_floor: int | None = None
         self._lock = threading.RLock()
+        # Kart sensor state — updated via MQTT from the kart Pi Zero 2 W
+        self.kart_door: str = "unknown"        # "open" | "closed" | "unknown"
+        self.kart_dog_present: bool | None = None
 
     # ------------------------------------------------------------------ #
     # Lifecycle                                                            #
@@ -55,6 +58,11 @@ class ElevatorFSM:
             if floor == self.current_floor:
                 logger.info("cmd_go(%d): already at floor", floor)
                 return
+            if self.kart_door == "open":
+                logger.warning("cmd_go(%d) blocked — kart door is open", floor)
+                return
+            if self.kart_door == "unknown":
+                logger.warning("cmd_go(%d): kart door state unknown — proceeding with caution", floor)
             self._set_state(State.MOVING)
 
         threading.Thread(target=self._do_move, args=(floor,), daemon=True).start()
@@ -77,6 +85,29 @@ class ElevatorFSM:
         self.motor.request_stop()
         self._set_state(State.FAULT)
         logger.error("Safety fault: %s — elevator stopped", pin_name)
+
+    def on_kart_door(self, status: str) -> None:
+        """Called when the kart door switch changes state (via MQTT)."""
+        with self._lock:
+            self.kart_door = status
+            moving = self.state == State.MOVING
+
+        if status == "open" and moving:
+            # Door opened during transit — treat as an e-stop
+            self.motor.request_stop()
+            self._set_state(State.FAULT)
+            logger.error("Safety fault: kart door opened during transit — elevator stopped")
+        else:
+            if self.on_status_change:
+                self.on_status_change(self._build_status())
+
+    def on_kart_pressure(self, dog_present: bool) -> None:
+        """Called when the kart pressure mat changes state (via MQTT)."""
+        with self._lock:
+            self.kart_dog_present = dog_present
+        logger.info("Kart pressure mat: dog_present=%s", dog_present)
+        if self.on_status_change:
+            self.on_status_change(self._build_status())
 
     @property
     def status(self) -> dict:
@@ -124,7 +155,9 @@ class ElevatorFSM:
 
     def _build_status(self) -> dict:
         return {
-            "state":    self.state.name.lower(),
-            "floor":    self.current_floor,
-            "position": self.motor.current_position,
+            "state":       self.state.name.lower(),
+            "floor":       self.current_floor,
+            "position":    self.motor.current_position,
+            "kart_door":   self.kart_door,
+            "dog_present": self.kart_dog_present,
         }

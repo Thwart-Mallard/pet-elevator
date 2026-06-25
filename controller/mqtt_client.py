@@ -15,11 +15,14 @@ class MQTTClient:
     Thin paho-mqtt wrapper.
 
     Subscribes to:
-      elevator/command        {"action": "go"|"home"|"reset", "floor": 0|1}
-      elevator/camera/+/detection  {"floor": 0|1, "confidence": 0.0-1.0}
+      elevator/command              {"action": "go"|"home"|"reset", "floor": 0|1}
+      elevator/camera/+/detection   {"floor": 0|1, "confidence": 0.0-1.0}
+      elevator/kart/door            {"status": "open"|"closed"}
+      elevator/kart/pressure        {"dog_present": true|false}
 
     Publishes to:
-      elevator/status         {"state": "...", "floor": ..., "position": ...}
+      elevator/status         {"state": "...", "floor": ..., "position": ...,
+                               "kart_door": "...", "dog_present": ...}
     """
 
     def __init__(self, fsm) -> None:
@@ -55,8 +58,10 @@ class MQTTClient:
             return
 
         logger.info("MQTT connected to %s:%d", config.MQTT_BROKER, config.MQTT_PORT)
-        client.subscribe(config.MQTT_TOPIC_COMMAND,   qos=1)
-        client.subscribe(config.MQTT_TOPIC_DETECTION, qos=0)
+        client.subscribe(config.MQTT_TOPIC_COMMAND,       qos=1)
+        client.subscribe(config.MQTT_TOPIC_DETECTION,     qos=0)
+        client.subscribe(config.MQTT_TOPIC_KART_DOOR,     qos=1)
+        client.subscribe(config.MQTT_TOPIC_KART_PRESSURE, qos=1)
 
         # Publish current status immediately on (re)connect so retained message is fresh
         self.publish_status(self.fsm.status)
@@ -76,6 +81,10 @@ class MQTTClient:
             self._handle_command(payload)
         elif "/detection" in msg.topic:
             self._handle_detection(msg.topic, payload)
+        elif msg.topic == config.MQTT_TOPIC_KART_DOOR:
+            self._handle_kart_door(payload)
+        elif msg.topic == config.MQTT_TOPIC_KART_PRESSURE:
+            self._handle_kart_pressure(payload)
 
     def _handle_command(self, payload: dict) -> None:
         action = payload.get("action")
@@ -97,6 +106,22 @@ class MQTTClient:
             self.fsm.on_safety_fault("web_estop")
         else:
             logger.warning("Command: unknown action %r", action)
+
+    def _handle_kart_door(self, payload: dict) -> None:
+        status = payload.get("status")
+        if status not in ("open", "closed"):
+            logger.warning("Malformed kart door payload: %r", payload)
+            return
+        logger.info("Kart door: %s", status)
+        self.fsm.on_kart_door(status)
+
+    def _handle_kart_pressure(self, payload: dict) -> None:
+        present = payload.get("dog_present")
+        if not isinstance(present, bool):
+            logger.warning("Malformed kart pressure payload: %r", payload)
+            return
+        logger.info("Kart pressure mat: dog_present=%s", present)
+        self.fsm.on_kart_pressure(present)
 
     def _handle_detection(self, topic: str, payload: dict) -> None:
         """
