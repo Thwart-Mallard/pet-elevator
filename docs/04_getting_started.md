@@ -45,7 +45,7 @@ Or copy the project directory by other means. The working directory should be
 sudo raspi-config   # → System Options → Hostname → pet-elevator
 ```
 
-The kart camera node resolves the broker at `pet-elevator.local` by default.
+All Pi Zero 2 W nodes resolve the broker at `pet-elevator.local` by default.
 
 ### 4. Install the systemd service
 
@@ -135,25 +135,41 @@ Expected output:
 Homing will fail if the GPIO pins are not connected — that is expected at this
 stage. Stop with Ctrl-C.
 
-### On the Pi Zero 2 W (kart)
+### On a landing Pi Zero 2 W
 
-Test detection in isolation:
+Test camera detection in isolation:
 
 ```bash
-ELEVATOR_BROKER=pet-elevator.local python -m camera_node.main
+ELEVATOR_FLOOR=0 ELEVATOR_BROKER=pet-elevator.local python -m camera_node.main
 ```
 
 Hold a dog toy or a printed dog photo in front of the camera. You should see log
 lines like:
 
 ```
-2024-...  camera_node.main   INFO  Dog detected — published score=0.847 to elevator/camera/kart/detection
+2024-...  camera_node.main   INFO  Dog detected — published score=0.847 to elevator/camera/floor0/detection
 ```
 
 On the Pi 4B, verify the MQTT event arrives:
 
 ```bash
 mosquitto_sub -t 'elevator/#' -v
+```
+
+### On the kart Pi Zero 2 W
+
+Test door switch and pressure mat in isolation:
+
+```bash
+ELEVATOR_BROKER=pet-elevator.local python -m kart_node.main
+```
+
+Open and close the door, then stand on the pressure mat. You should see:
+
+```bash
+mosquitto_sub -h pet-elevator.local -t 'elevator/kart/#' -v
+# elevator/kart/door     {"status": "closed"}
+# elevator/kart/pressure {"dog_present": false}
 ```
 
 ---
@@ -283,7 +299,7 @@ mosquitto_pub -h pet-elevator.local -t elevator/command \
 
 The platform re-homes from wherever it stopped.
 
-### 7. Start the camera services
+### 7. Start the Pi Zero services
 
 On each landing Pi Zero 2 W:
 
@@ -292,8 +308,16 @@ sudo systemctl start elevator-camera
 journalctl -u elevator-camera -f
 ```
 
-Verify detections appear in the Pi 4B logs and that the elevator responds by
-calling itself to the floor where the dog is waiting.
+On the kart Pi Zero 2 W:
+
+```bash
+sudo systemctl start elevator-kart
+journalctl -u elevator-kart -f
+```
+
+Verify camera detections appear in the Pi 4B logs and the elevator calls itself
+to the floor where the dog is waiting. Verify door/pressure state updates reach
+the Pi 4B (`mosquitto_sub -h pet-elevator.local -t 'elevator/kart/#' -v`).
 
 ---
 
@@ -389,8 +413,11 @@ At 25 mm/s, full travel (3048 mm) takes approximately **2 minutes 2 seconds**.
 # Pi 4B controller
 journalctl -u elevator-controller -f
 
-# Pi Zero 2 W kart camera node
+# Pi Zero 2 W landing camera node
 journalctl -u elevator-camera -f
+
+# Pi Zero 2 W kart sensor node
+journalctl -u elevator-kart -f
 
 # All MQTT traffic (from Pi 4B)
 mosquitto_sub -t '#' -v
