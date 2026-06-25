@@ -141,4 +141,5 @@ class MQTTClient:
             return
 
         logger.info("Dog detected at floor %d (confidence=%.2f) — requesting elevator", floor, confidence)
+        self.fsm.on_dog_detected(floor)
         self.fsm.cmd_go(floor)

@@ -162,6 +162,23 @@ h1 { font-size: 1.2rem; font-weight: 700; }
   user-select: none;
 }
 
+.dog-waiting {
+  position: absolute;
+  right: 8px;
+  font-size: 15px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+#dog-f0 { bottom: 8px; }
+#dog-f1 { top: 8px; }
+.dog-waiting.active { opacity: 1; animation: dog-bounce 1s ease-in-out infinite; }
+
+@keyframes dog-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
 /* ── Buttons ── */
 button {
   border: none;
@@ -291,7 +308,9 @@ button:disabled {
       <span>Ground<br>Floor</span>
     </div>
     <div class="shaft" id="shaft">
-      <div id="carriage">🐕</div>
+      <div class="dog-waiting" id="dog-f1">🐕</div>
+      <div id="carriage">🛗</div>
+      <div class="dog-waiting" id="dog-f0">🐕</div>
     </div>
   </div>
 </div>
@@ -353,6 +372,12 @@ function updateUI(s) {
   const pct      = Math.min(1, Math.max(0, pos / TOTAL_STEPS));
   const travel   = shaft.clientHeight - carriage.offsetHeight - 12;
   carriage.style.bottom = (6 + pct * travel) + 'px';
+
+  // Dog waiting indicators
+  document.getElementById('dog-f0').className =
+    'dog-waiting' + (s.dog_waiting === 0 ? ' active' : '');
+  document.getElementById('dog-f1').className =
+    'dog-waiting' + (s.dog_waiting === 1 ? ' active' : '');
 
   // Kart door
   const doorPill = document.getElementById('door-pill');

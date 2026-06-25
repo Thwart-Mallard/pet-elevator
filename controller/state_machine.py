@@ -36,6 +36,8 @@ class ElevatorFSM:
         # Kart sensor state — updated via MQTT from the kart Pi Zero 2 W
         self.kart_door: str = "unknown"        # "open" | "closed" | "unknown"
         self.kart_dog_present: bool | None = None
+        # Landing camera state — floor where a dog is waiting, or None
+        self.dog_waiting_floor: int | None = None
 
     # ------------------------------------------------------------------ #
     # Lifecycle                                                            #
@@ -105,7 +107,18 @@ class ElevatorFSM:
         """Called when the kart pressure mat changes state (via MQTT)."""
         with self._lock:
             self.kart_dog_present = dog_present
+            if dog_present:
+                self.dog_waiting_floor = None   # dog has boarded
         logger.info("Kart pressure mat: dog_present=%s", dog_present)
+        if self.on_status_change:
+            self.on_status_change(self._build_status())
+
+    def on_dog_detected(self, floor: int) -> None:
+        """Called when a landing camera sees the dog above the confidence threshold."""
+        with self._lock:
+            if self.current_floor == floor:
+                return  # elevator already here — nothing to indicate
+            self.dog_waiting_floor = floor
         if self.on_status_change:
             self.on_status_change(self._build_status())
 
@@ -124,6 +137,8 @@ class ElevatorFSM:
                 return  # safety fault fired during the move; fault state already set
             if success:
                 self.current_floor = floor
+                if self.dog_waiting_floor == floor:
+                    self.dog_waiting_floor = None
                 self._set_state(State.IDLE)
             else:
                 self._set_state(State.FAULT)
@@ -160,4 +175,5 @@ class ElevatorFSM:
             "position":    self.motor.current_position,
             "kart_door":   self.kart_door,
             "dog_present": self.kart_dog_present,
+            "dog_waiting": self.dog_waiting_floor,
         }
