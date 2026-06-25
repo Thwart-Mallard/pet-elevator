@@ -1,0 +1,46 @@
+# Pet Elevator — Pi 4 master controller
+#
+# Install:
+#   sudo cp deploy/elevator-controller.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable elevator-controller
+#   sudo systemctl start elevator-controller
+#
+# Logs:
+#   journalctl -u elevator-controller -f
+
+[Unit]
+Description=Pet Elevator Controller
+Documentation=https://github.com/yourrepo/pet-elevator
+# pigpiod must be running before we can open GPIO
+# mosquitto must be running before we connect as MQTT client
+After=pigpiod.service mosquitto.service network.target
+Requires=pigpiod.service mosquitto.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+
+# Adjust this path to wherever the project lives on the Pi 4
+WorkingDirectory=/home/pi/pet-elevator
+
+ExecStart=/usr/bin/python3 -m controller.main
+
+# SIGTERM triggers the clean shutdown handler in main.py (stops motor, releases GPIO)
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+Restart=on-failure
+RestartSec=5s
+
+# Limit restart storms — give up after 3 failures in 60 s
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=elevator-controller
+
+[Install]
+WantedBy=multi-user.target

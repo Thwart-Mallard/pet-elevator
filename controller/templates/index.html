@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pet Elevator</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #0f172a;
+  --card:   #1e293b;
+  --border: #334155;
+  --text:   #f1f5f9;
+  --muted:  #94a3b8;
+  --green:  #22c55e;
+  --blue:   #3b82f6;
+  --amber:  #f59e0b;
+  --red:    #ef4444;
+  --gray:   #475569;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 32px;
+  gap: 14px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+h1 { font-size: 1.2rem; font-weight: 700; }
+
+#conn-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+#conn-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gray);
+  transition: background 0.4s;
+}
+#conn-dot.live         { background: var(--green); }
+#conn-dot.reconnecting { background: var(--amber); }
+
+/* ── Card ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  width: 100%;
+}
+
+/* ── Status card ── */
+#state-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  background: var(--gray);
+  color: #fff;
+  transition: background 0.35s;
+}
+#state-badge.idle   { background: var(--green); }
+#state-badge.moving { background: var(--blue);  animation: pulse-blue 1.4s ease-in-out infinite; }
+#state-badge.homing { background: var(--amber); color: #000; animation: pulse-blue 1.4s ease-in-out infinite; }
+#state-badge.fault  { background: var(--red);   animation: pulse-red  1s ease-in-out infinite; }
+#state-badge.boot   { background: var(--gray); }
+
+@keyframes pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+
+#floor-label {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* ── Shaft ── */
+.shaft-wrap {
+  display: flex;
+  gap: 14px;
+  height: 200px;
+  align-items: stretch;
+}
+
+.floor-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.3;
+  padding: 2px 0;
+  min-width: 64px;
+}
+
+.shaft {
+  flex: 1;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* floor markers */
+.shaft::before, .shaft::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--border);
+  opacity: 0.6;
+}
+.shaft::before { top:    5px; }
+.shaft::after  { bottom: 5px; }
+
+#carriage {
+  position: absolute;
+  left: 5px; right: 5px;
+  height: 32px;
+  background: var(--blue);
+  border-radius: 5px;
+  bottom: 8px;               /* set by JS */
+  transition: bottom 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  user-select: none;
+}
+
+/* ── Buttons ── */
+button {
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 16px 12px;
+}
+
+button:active:not(:disabled) { transform: scale(0.96); }
+
+button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-floor {
+  background: var(--card);
+  border: 2px solid var(--border);
+  color: var(--text);
+}
+
+.btn-floor:not(:disabled):hover { border-color: var(--blue); }
+
+#btn-estop {
+  width: 100%;
+  padding: 20px;
+  background: var(--red);
+  color: #fff;
+  font-size: 1.05rem;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+}
+
+#btn-estop:active:not(:disabled) { background: #b91c1c; }
+
+.btn-row-sec {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-row-sec button { flex: 1; }
+
+.btn-sec {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 13px;
+}
+
+#btn-reset {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pet Elevator</h1>
+  <div id="conn-badge">
+    <div id="conn-dot"></div>
+    <span id="conn-text">connecting</span>
+  </div>
+</header>
+
+<!-- Status -->
+<div class="card">
+  <div id="state-badge">—</div>
+  <div id="floor-label">—</div>
+
+  <div class="shaft-wrap">
+    <div class="floor-labels">
+      <span>Upper<br>Floor</span>
+      <span>Ground<br>Floor</span>
+    </div>
+    <div class="shaft" id="shaft">
+      <div id="carriage">🐕</div>
+    </div>
+  </div>
+</div>
+
+<!-- Floor buttons -->
+<div class="btn-row">
+  <button class="btn-floor" id="btn-f1" onclick="goFloor(1)">↑ Upper Floor</button>
+  <button class="btn-floor" id="btn-f0" onclick="goFloor(0)">↓ Ground Floor</button>
+</div>
+
+<!-- Emergency stop -->
+<button id="btn-estop" onclick="cmd({action:'estop'})">⏹ Emergency Stop</button>
+
+<!-- Secondary -->
+<div class="btn-row-sec">
+  <button class="btn-sec" id="btn-home"  onclick="cmd({action:'home'})">⌂ Re-home</button>
+  <button class="btn-sec" id="btn-reset" onclick="cmd({action:'reset'})" hidden>↺ Reset &amp; Re-home</button>
+</div>
+
+<script>
+const TOTAL_STEPS = {{ total_steps }};
+
+const STATE_LABEL = {
+  boot:   'Starting…',
+  homing: 'Homing',
+  idle:   'Ready',
+  moving: 'Moving',
+  fault:  'Fault',
+};
+const FLOOR_LABEL = { 0: 'Ground Floor', 1: 'Upper Floor' };
+
+function updateUI(s) {
+  // Badge
+  const badge = document.getElementById('state-badge');
+  badge.textContent = STATE_LABEL[s.state] ?? s.state;
+  badge.className = s.state ?? '';
+
+  // Floor label
+  document.getElementById('floor-label').textContent =
+    s.floor != null ? FLOOR_LABEL[s.floor] : 'In Transit';
+
+  // Carriage position
+  const pos      = s.position ?? 0;
+  const shaft    = document.getElementById('shaft');
+  const carriage = document.getElementById('carriage');
+  const pct      = Math.min(1, Math.max(0, pos / TOTAL_STEPS));
+  const travel   = shaft.clientHeight - carriage.offsetHeight - 12;
+  carriage.style.bottom = (6 + pct * travel) + 'px';
+
+  // Buttons
+  const idle = s.state === 'idle';
+  document.getElementById('btn-f1').disabled    = !idle || s.floor === 1;
+  document.getElementById('btn-f0').disabled    = !idle || s.floor === 0;
+  document.getElementById('btn-home').disabled  = !['idle','fault'].includes(s.state);
+  document.getElementById('btn-reset').hidden   = s.state !== 'fault';
+}
+
+function goFloor(floor) { cmd({ action: 'go', floor }); }
+
+function cmd(payload) {
+  fetch('/api/command', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload),
+  }).catch(() => {});
+}
+
+// ── SSE ──
+const src = new EventSource('/api/events');
+
+src.onopen = () => {
+  document.getElementById('conn-dot').className  = 'live';
+  document.getElementById('conn-text').textContent = 'live';
+};
+
+src.onerror = () => {
+  document.getElementById('conn-dot').className  = 'reconnecting';
+  document.getElementById('conn-text').textContent = 'reconnecting…';
+};
+
+src.onmessage = e => {
+  try { updateUI(JSON.parse(e.data)); } catch (_) {}
+};
+
+// Initial snapshot while SSE handshakes
+fetch('/api/status').then(r => r.json()).then(updateUI).catch(() => {});
+</script>
+</body>
+</html>

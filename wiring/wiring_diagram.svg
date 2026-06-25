@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 980"
+     font-family="'Courier New', Courier, monospace">
+
+<rect width="1400" height="980" fill="#0f172a"/>
+
+<!-- TITLE -->
+<text x="700" y="28" text-anchor="middle" fill="#f1f5f9"
+      font-family="system-ui,sans-serif" font-size="16" font-weight="bold">Pet Elevator — Wiring Diagram v2</text>
+<text x="700" y="46" text-anchor="middle" fill="#475569"
+      font-family="system-ui,sans-serif" font-size="10">Raspberry Pi 4 · DM542T · NEMA 23 + 10:1 Gearbox · 24V DC  |  All safety switches NC — HIGH = fault (wire-break safe)</text>
+
+<!-- ═══ LEGEND ═══ -->
+<rect x="1060" y="58" width="318" height="252" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1219" y="76" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">WIRE LEGEND</text>
+<line x1="1074" y1="93"  x2="1118" y2="93"  stroke="#ef4444" stroke-width="3"/>
+<text x="1128" y="97"  fill="#f1f5f9" font-size="11">24V Power</text>
+<line x1="1074" y1="113" x2="1118" y2="113" stroke="#475569" stroke-width="3"/>
+<text x="1128" y="117" fill="#f1f5f9" font-size="11">GND / Power return</text>
+<line x1="1074" y1="133" x2="1118" y2="133" stroke="#f97316" stroke-width="2"/>
+<text x="1128" y="137" fill="#f1f5f9" font-size="11">5V (Pi 4 supply)</text>
+<line x1="1074" y1="153" x2="1118" y2="153" stroke="#3b82f6" stroke-width="2"/>
+<text x="1128" y="157" fill="#f1f5f9" font-size="11">STEP (GPIO 18)</text>
+<line x1="1074" y1="173" x2="1118" y2="173" stroke="#22c55e" stroke-width="2"/>
+<text x="1128" y="177" fill="#f1f5f9" font-size="11">DIR  (GPIO 23)</text>
+<line x1="1074" y1="193" x2="1118" y2="193" stroke="#a855f7" stroke-width="2"/>
+<text x="1128" y="197" fill="#f1f5f9" font-size="11">ENA  (GPIO 24)</text>
+<line x1="1074" y1="213" x2="1118" y2="213" stroke="#94a3b8" stroke-width="2"/>
+<text x="1128" y="217" fill="#f1f5f9" font-size="11">Safety inputs (NC)</text>
+<line x1="1074" y1="233" x2="1118" y2="233" stroke="#eab308" stroke-width="2.5"/>
+<text x="1128" y="237" fill="#f1f5f9" font-size="11">Motor Coil A</text>
+<line x1="1074" y1="253" x2="1118" y2="253" stroke="#06b6d4" stroke-width="2.5"/>
+<text x="1128" y="257" fill="#f1f5f9" font-size="11">Motor Coil B</text>
+<line x1="1160" y1="273" x2="1204" y2="273" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,3"/>
+<text x="1214" y="277" fill="#94a3b8" font-size="10">dashed = return wire</text>
+<line x1="1074" y1="295" x2="1118" y2="295" stroke="#f59e0b" stroke-width="2" stroke-dasharray="8,4"/>
+<text x="1128" y="299" fill="#f1f5f9" font-size="11">Web UI (WiFi · HTTP)</text>
+
+<!-- ═══ LEFT COLUMN — Safety Inputs ═══ -->
+
+<!-- Limit Switch Bottom -->
+<rect x="40" y="88" width="165" height="68" rx="6" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="122" y="108" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">LIMIT SW ↓</text>
+<text x="122" y="123" text-anchor="middle" fill="#94a3b8" font-size="10">Ground Floor  NC</text>
+<text x="122" y="138" text-anchor="middle" fill="#475569" font-size="9">COM→GPIO17   NC→GND</text>
+<circle cx="205" cy="122" r="3" fill="#94a3b8"/>
+
+<!-- E-Stop -->
+<rect x="40" y="188" width="165" height="68" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+<text x="122" y="208" text-anchor="middle" fill="#ef4444" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">E-STOP ⬛</text>
+<text x="122" y="223" text-anchor="middle" fill="#ef4444" font-size="10">NC Latching</text>
+<text x="122" y="238" text-anchor="middle" fill="#475569" font-size="9">COM→GPIO22   NC→GND</text>
+<circle cx="205" cy="222" r="3" fill="#ef4444"/>
+
+<!-- Limit Switch Top -->
+<rect x="40" y="288" width="165" height="68" rx="6" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="122" y="308" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">LIMIT SW ↑</text>
+<text x="122" y="323" text-anchor="middle" fill="#94a3b8" font-size="10">Upper Floor  NC</text>
+<text x="122" y="338" text-anchor="middle" fill="#475569" font-size="9">COM→GPIO27   NC→GND</text>
+<circle cx="205" cy="322" r="3" fill="#94a3b8"/>
+
+<!-- Phone / Browser (Web UI) -->
+<rect x="40" y="368" width="200" height="62" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+<text x="140" y="388" text-anchor="middle" fill="#f59e0b" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">Phone / Browser</text>
+<text x="140" y="403" text-anchor="middle" fill="#94a3b8" font-size="10">pet-elevator.local:8080</text>
+<text x="140" y="419" text-anchor="middle" fill="#475569" font-size="9">Flask · SSE real-time updates</text>
+
+<!-- Pi Zero 2 W — Floor 0 -->
+<rect x="40" y="440" width="200" height="82" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
+<text x="140" y="460" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">Pi Zero 2 W  (Floor 0)</text>
+<text x="140" y="476" text-anchor="middle" fill="#94a3b8" font-size="10">CSI camera · TFLite MobileNet SSD</text>
+<text x="140" y="491" text-anchor="middle" fill="#475569" font-size="9">ELEVATOR_FLOOR=0</text>
+<text x="140" y="506" text-anchor="middle" fill="#475569" font-size="9">publishes: elevator/camera/floor0/detection</text>
+
+<!-- Pi Zero 2 W — Floor 1 -->
+<rect x="40" y="548" width="200" height="82" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
+<text x="140" y="568" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">Pi Zero 2 W  (Floor 1)</text>
+<text x="140" y="584" text-anchor="middle" fill="#94a3b8" font-size="10">CSI camera · TFLite MobileNet SSD</text>
+<text x="140" y="599" text-anchor="middle" fill="#475569" font-size="9">ELEVATOR_FLOOR=1</text>
+<text x="140" y="614" text-anchor="middle" fill="#475569" font-size="9">publishes: elevator/camera/floor1/detection</text>
+
+<!-- WiFi/MQTT arrows -->
+<line x1="240" y1="481" x2="375" y2="481" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,3"/>
+<line x1="240" y1="589" x2="375" y2="540" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,3"/>
+<text x="295" y="473" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="9" font-style="italic">WiFi · MQTT →</text>
+<text x="295" y="579" text-anchor="middle" fill="#06b6d4" font-family="system-ui,sans-serif" font-size="9" font-style="italic">WiFi · MQTT →</text>
+
+<!-- ═══ RASPBERRY PI 4 ═══ -->
+<rect x="380" y="58" width="248" height="620" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+<text x="504" y="80" text-anchor="middle" fill="#3b82f6" font-family="system-ui,sans-serif" font-size="13" font-weight="bold">Raspberry Pi 4</text>
+<text x="504" y="96" text-anchor="middle" fill="#475569" font-size="9">3.3V GPIO logic · pigpio daemon</text>
+<text x="504" y="110" text-anchor="middle" fill="#475569" font-size="9">Mosquitto MQTT broker · Python controller</text>
+<text x="504" y="124" text-anchor="middle" fill="#f59e0b" font-size="9">Flask Web UI · port 8080</text>
+
+<!-- Pi 4 left-side input pins -->
+<circle cx="380" cy="178" r="4" fill="#94a3b8"/>
+<text x="392" y="182" fill="#94a3b8" font-size="10">GPIO17  LIMIT ↓  (PUD_UP)</text>
+<circle cx="380" cy="228" r="4" fill="#ef4444"/>
+<text x="392" y="232" fill="#ef4444" font-size="10">GPIO22  ESTOP    (PUD_UP)</text>
+<circle cx="380" cy="278" r="4" fill="#94a3b8"/>
+<text x="392" y="282" fill="#94a3b8" font-size="10">GPIO27  LIMIT ↑  (PUD_UP)</text>
+
+<!-- divider -->
+<line x1="396" y1="308" x2="612" y2="308" stroke="#334155" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="504" y="323" text-anchor="middle" fill="#334155" font-size="9">── stepper driver outputs ──</text>
+
+<!-- Pi 4 right-side output pins -->
+<circle cx="628" cy="368" r="4" fill="#3b82f6"/>
+<text x="616" y="365" text-anchor="end" fill="#3b82f6" font-size="10">GPIO18  STEP</text>
+<circle cx="628" cy="418" r="4" fill="#22c55e"/>
+<text x="616" y="415" text-anchor="end" fill="#22c55e" font-size="10">GPIO23  DIR</text>
+<circle cx="628" cy="468" r="4" fill="#a855f7"/>
+<text x="616" y="465" text-anchor="end" fill="#a855f7" font-size="10">GPIO24  ENA</text>
+<circle cx="628" cy="518" r="4" fill="#475569"/>
+<text x="616" y="515" text-anchor="end" fill="#475569" font-size="10">GND</text>
+
+<!-- Pi 4 power note -->
+<line x1="396" y1="548" x2="612" y2="548" stroke="#334155" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="504" y="570" text-anchor="middle" fill="#f97316" font-size="10">5V / 3A USB-C power supply</text>
+<text x="504" y="585" text-anchor="middle" fill="#475569" font-size="9">Separate from 24V motor supply</text>
+<text x="504" y="600" text-anchor="middle" fill="#475569" font-size="9">Pi GND must be common with DM542T GND</text>
+<text x="504" y="620" text-anchor="middle" fill="#334155" font-size="9">mDNS: pet-elevator.local</text>
+<text x="504" y="635" text-anchor="middle" fill="#334155" font-size="9">MQTT: port 1883</text>
+<text x="504" y="655" text-anchor="middle" fill="#334155" font-size="9">Run: python -m controller.main</text>
+
+<!-- ═══ DM542T Stepper Driver ═══ -->
+<rect x="800" y="58" width="215" height="420" rx="8" fill="#1e293b" stroke="#a855f7" stroke-width="2"/>
+<text x="907" y="80" text-anchor="middle" fill="#a855f7" font-family="system-ui,sans-serif" font-size="13" font-weight="bold">DM542T</text>
+<text x="907" y="96" text-anchor="middle" fill="#475569" font-size="9">Stepper Driver · 24–50V · up to 4.2A RMS</text>
+
+<!-- DM542T left-side signal pins (common-cathode wiring) -->
+<circle cx="800" cy="145" r="4" fill="#3b82f6"/>
+<text x="812" y="149" fill="#3b82f6" font-size="10">PUL+  ← GPIO18 (STEP)</text>
+<circle cx="800" cy="173" r="4" fill="#475569"/>
+<text x="812" y="177" fill="#475569" font-size="10">PUL−  → GND</text>
+
+<circle cx="800" cy="213" r="4" fill="#22c55e"/>
+<text x="812" y="217" fill="#22c55e" font-size="10">DIR+  ← GPIO23 (DIR)</text>
+<circle cx="800" cy="241" r="4" fill="#475569"/>
+<text x="812" y="245" fill="#475569" font-size="10">DIR−  → GND</text>
+
+<circle cx="800" cy="281" r="4" fill="#a855f7"/>
+<text x="812" y="285" fill="#a855f7" font-size="10">ENA+  ← GPIO24 (ENA)</text>
+<circle cx="800" cy="309" r="4" fill="#475569"/>
+<text x="812" y="313" fill="#475569" font-size="10">ENA−  → GND</text>
+
+<!-- DM542T right-side power + motor pins -->
+<circle cx="1015" cy="145" r="4" fill="#ef4444"/>
+<text x="1003" y="142" text-anchor="end" fill="#ef4444" font-size="10">V+  (24V)</text>
+<circle cx="1015" cy="173" r="4" fill="#475569"/>
+<text x="1003" y="170" text-anchor="end" fill="#475569" font-size="10">GND</text>
+
+<circle cx="1015" cy="253" r="4" fill="#eab308"/>
+<text x="1003" y="250" text-anchor="end" fill="#eab308" font-size="10">A+</text>
+<circle cx="1015" cy="283" r="4" fill="#eab308"/>
+<text x="1003" y="280" text-anchor="end" fill="#eab308" font-size="10">A−</text>
+
+<circle cx="1015" cy="323" r="4" fill="#06b6d4"/>
+<text x="1003" y="320" text-anchor="end" fill="#06b6d4" font-size="10">B+</text>
+<circle cx="1015" cy="353" r="4" fill="#06b6d4"/>
+<text x="1003" y="350" text-anchor="end" fill="#06b6d4" font-size="10">B−</text>
+
+<!-- DM542T notes -->
+<text x="907" y="390" text-anchor="middle" fill="#475569" font-size="9">▲ 100µF 50V cap: V+ → GND (mandatory)</text>
+<text x="907" y="404" text-anchor="middle" fill="#475569" font-size="9">SW1–SW4: set RMS current for motor</text>
+<text x="907" y="418" text-anchor="middle" fill="#ef4444" font-size="9">SW5–SW8: 1/16 microstep → 135.81 steps/mm</text>
+<text x="907" y="432" text-anchor="middle" fill="#475569" font-size="9">ENA− tied low: motor enabled by default</text>
+<text x="907" y="446" text-anchor="middle" fill="#475569" font-size="9">ENA+ HIGH = disabled  LOW = holding torque</text>
+<text x="907" y="462" text-anchor="middle" fill="#475569" font-size="9">Swap A+/A− if motor turns wrong direction</text>
+
+<!-- ═══ NEMA 23 ═══ -->
+<rect x="800" y="498" width="215" height="185" rx="8" fill="#1e293b" stroke="#eab308" stroke-width="2"/>
+<text x="907" y="520" text-anchor="middle" fill="#eab308" font-family="system-ui,sans-serif" font-size="13" font-weight="bold">NEMA 23</text>
+<text x="907" y="536" text-anchor="middle" fill="#475569" font-size="9">3 N·m + 10:1 Gearbox · 75mm drum · 3048mm travel</text>
+
+<circle cx="800" cy="568" r="5" fill="#eab308"/>
+<text x="812" y="572" fill="#eab308" font-size="10">A+  (coil 1)</text>
+<circle cx="800" cy="600" r="5" fill="#eab308"/>
+<text x="812" y="604" fill="#eab308" font-size="10">A−  (coil 1 return)</text>
+<circle cx="800" cy="638" r="5" fill="#06b6d4"/>
+<text x="812" y="642" fill="#06b6d4" font-size="10">B+  (coil 2)</text>
+<circle cx="800" cy="668" r="5" fill="#06b6d4"/>
+<text x="812" y="672" fill="#06b6d4" font-size="10">B−  (coil 2 return)</text>
+<text x="960" y="630" text-anchor="middle" fill="#475569" font-size="9">Find coil pairs with</text>
+<text x="960" y="643" text-anchor="middle" fill="#475569" font-size="9">multimeter: ~2Ω/pair</text>
+
+<!-- ═══ 24V PSU ═══ -->
+<rect x="800" y="710" width="215" height="90" rx="8" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+<text x="907" y="733" text-anchor="middle" fill="#ef4444" font-family="system-ui,sans-serif" font-size="13" font-weight="bold">PSU  24V DC</text>
+<text x="907" y="749" text-anchor="middle" fill="#475569" font-size="9">Min 5A / 120W · switching supply</text>
+<circle cx="1015" cy="730" r="5" fill="#ef4444"/>
+<text x="1003" y="727" text-anchor="end" fill="#ef4444" font-size="10">24V+</text>
+<circle cx="1015" cy="762" r="5" fill="#475569"/>
+<text x="1003" y="759" text-anchor="end" fill="#475569" font-size="10">GND</text>
+
+<!-- ═══ WIRES ═══ -->
+
+<!-- Safety inputs: switch COM → Pi 4 GPIO (left side) -->
+<polyline points="205,122  300,122  300,178  380,178"
+          fill="none" stroke="#94a3b8" stroke-width="2"/>
+<polyline points="205,222  300,222  300,228  380,228"
+          fill="none" stroke="#ef4444" stroke-width="2"/>
+<polyline points="205,322  300,322  300,278  380,278"
+          fill="none" stroke="#94a3b8" stroke-width="2"/>
+
+<!-- NC terminals → GND bus (dashed, drops to y=878) -->
+<line x1="122" y1="156" x2="122" y2="878" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+<line x1="112" y1="256" x2="112" y2="878" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+<line x1="102" y1="356" x2="102" y2="878" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+<!-- Stepper outputs: Pi 4 right-side → DM542T left-side -->
+<!-- STEP -->
+<polyline points="628,368  714,368  714,145  800,145"
+          fill="none" stroke="#3b82f6" stroke-width="2"/>
+<!-- DIR -->
+<polyline points="628,418  724,418  724,213  800,213"
+          fill="none" stroke="#22c55e" stroke-width="2"/>
+<!-- ENA -->
+<polyline points="628,468  734,468  734,281  800,281"
+          fill="none" stroke="#a855f7" stroke-width="2"/>
+
+<!-- Pi GND → DM542T PUL-/DIR-/ENA- (common cathode rail) -->
+<!-- Single GND wire splits to PUL-, DIR-, ENA- via vertical rail at x=744 -->
+<polyline points="628,518  744,518  744,173  800,173"
+          fill="none" stroke="#475569" stroke-width="1.5"/>
+<line x1="744" y1="173" x2="744" y2="309" stroke="#475569" stroke-width="1.5"/>
+<line x1="744" y1="241" x2="800" y2="241" stroke="#475569" stroke-width="1.5"/>
+<line x1="744" y1="309" x2="800" y2="309" stroke="#475569" stroke-width="1.5"/>
+<circle cx="744" cy="241" r="3" fill="#475569"/>
+<circle cx="744" cy="309" r="3" fill="#475569"/>
+
+<!-- 24V PSU V+ → DM542T V+ (vertical wire on right at x=1048) -->
+<polyline points="1015,730  1048,730  1048,145  1015,145"
+          fill="none" stroke="#ef4444" stroke-width="3"/>
+<rect x="1052" y="428" width="32" height="16" rx="3" fill="#1e293b"/>
+<text x="1068" y="440" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="bold">24V</text>
+
+<!-- DM542T GND → GND bus (drops to y=878) -->
+<polyline points="1015,173  1058,173  1058,878"
+          fill="none" stroke="#475569" stroke-width="2"/>
+
+<!-- 24V PSU GND → GND bus -->
+<polyline points="1015,762  1064,762  1064,878  800,878"
+          fill="none" stroke="#475569" stroke-width="2.5"/>
+
+<!-- Motor coils: DM542T right → NEMA23 left -->
+<polyline points="1015,253  1038,253  1038,568  800,568"
+          fill="none" stroke="#eab308" stroke-width="3"/>
+<polyline points="1015,283  1033,283  1033,600  800,600"
+          fill="none" stroke="#eab308" stroke-width="2.5" stroke-dasharray="7,3"/>
+<polyline points="1015,323  1028,323  1028,638  800,638"
+          fill="none" stroke="#06b6d4" stroke-width="3"/>
+<polyline points="1015,353  1023,353  1023,668  800,668"
+          fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-dasharray="7,3"/>
+
+<!-- Web UI: browser → Pi 4 (WiFi, HTTP port 8080) -->
+<line x1="240" y1="399" x2="378" y2="399" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="8,4"/>
+<text x="305" y="393" text-anchor="middle" fill="#f59e0b" font-family="system-ui,sans-serif" font-size="9" font-style="italic">WiFi · HTTP :8080 →</text>
+
+<!-- GND bus (y=878) -->
+<line x1="40" y1="878" x2="1064" y2="878" stroke="#475569" stroke-width="2.5"/>
+<text x="540" y="896" text-anchor="middle" fill="#475569"
+      font-family="system-ui,sans-serif" font-size="10">── SYSTEM GND BUS — common to Pi 4 · DM542T · 24V PSU ──</text>
+
+<!-- ═══ NOTES PANEL ═══ -->
+<rect x="40" y="716" width="530" height="152" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="305" y="735" text-anchor="middle" fill="#94a3b8"
+      font-family="system-ui,sans-serif" font-size="11" font-weight="bold">IMPORTANT NOTES</text>
+
+<text x="56" y="754" fill="#f97316" font-size="11">⚠</text>
+<text x="72" y="754" fill="#f1f5f9" font-size="10">All safety switches NC to GND — pin HIGH = fault or broken wire = STOP</text>
+
+<text x="56" y="773" fill="#f97316" font-size="11">⚠</text>
+<text x="72" y="773" fill="#f1f5f9" font-size="10">100µF 50V cap mandatory across DM542T V+/GND — prevents back-EMF spike</text>
+
+<text x="56" y="792" fill="#3b82f6" font-size="11">ℹ</text>
+<text x="72" y="792" fill="#f1f5f9" font-size="10">3.3V GPIO drives DM542T optocouplers at ~9.5mA (min spec: 10mA)</text>
+<text x="72" y="805" fill="#475569" font-size="9">  If missed steps occur: add BSS138 level-shifter board to bring signals to 5V</text>
+
+<text x="56" y="822" fill="#3b82f6" font-size="11">ℹ</text>
+<text x="72" y="822" fill="#f1f5f9" font-size="10">Pi 4 GND must share common ground with DM542T and 24V PSU GND</text>
+
+<text x="56" y="841" fill="#3b82f6" font-size="11">ℹ</text>
+<text x="72" y="841" fill="#f1f5f9" font-size="10">ENA+ LOW = motor enabled (holding torque). ENA+ HIGH = disabled (free-wheel)</text>
+
+<text x="56" y="858" fill="#3b82f6" font-size="11">ℹ</text>
+<text x="72" y="858" fill="#f1f5f9" font-size="10">Pi Zero 2 W units powered independently (5V micro-USB) — no motor supply connection</text>
+
+</svg>

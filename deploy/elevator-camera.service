@@ -1,0 +1,53 @@
+# Pet Elevator — Pi Zero 2 W camera node
+#
+# Install (run on each Zero 2 W):
+#   1. Copy and edit the env file first:
+#        sudo cp deploy/elevator-camera.env /etc/default/elevator-camera
+#        sudo nano /etc/default/elevator-camera   # set ELEVATOR_FLOOR and ELEVATOR_BROKER
+#
+#   2. Install the service:
+#        sudo cp deploy/elevator-camera.service /etc/systemd/system/
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable elevator-camera
+#        sudo systemctl start elevator-camera
+#
+# Logs:
+#   journalctl -u elevator-camera -f
+
+[Unit]
+Description=Pet Elevator Camera Node
+Documentation=https://github.com/yourrepo/pet-elevator
+# Wait for the network so the MQTT connection to the Pi 4 can succeed
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+
+# Adjust this path to wherever the project lives on the Zero 2 W
+WorkingDirectory=/home/pi/pet-elevator
+
+# Floor identity and broker address are kept outside the unit file so both
+# Zero 2 W units can use the same service file with different env files.
+EnvironmentFile=/etc/default/elevator-camera
+
+ExecStart=/usr/bin/python3 -m camera_node.main
+
+KillSignal=SIGTERM
+TimeoutStopSec=5
+
+Restart=on-failure
+RestartSec=10s
+
+# Camera initialisation can take a moment on first boot; give it time
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=elevator-camera
+
+[Install]
+WantedBy=multi-user.target
