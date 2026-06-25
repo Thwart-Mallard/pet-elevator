@@ -29,7 +29,8 @@ via MQTT from any device on the home network.
 1. On boot the Pi 4B homes the carriage to the ground floor limit switch.
 2. Landing camera nodes watch their respective floors continuously.
 3. When a camera detects the dog with ≥ 80% confidence it publishes a detection
-   event to the MQTT broker on the Pi 4B.
+   event to the MQTT broker on the Pi 4B. The web UI shows a bouncing 🐕 at
+   that floor on the shaft.
 4. The Pi 4B state machine calls the elevator to that floor — but only if the kart
    door is confirmed closed.
 5. The dog boards the kart; the pressure mat confirms presence. The door is closed.

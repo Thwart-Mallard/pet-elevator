@@ -217,9 +217,18 @@ Assistant, etc.) receives the current state immediately on connect.
 ### Detection handling
 
 A camera detection event is acted on only if `confidence ≥ 0.80`. Below that
-threshold the event is logged at DEBUG level and discarded. The FSM's `cmd_go()`
-silently ignores the request if the elevator is already at that floor or in motion,
-so repeated detections while the elevator travels are harmless.
+threshold the event is logged at DEBUG level and discarded.
+
+When confidence clears the threshold, two FSM methods are called in sequence:
+
+1. `fsm.on_dog_detected(floor)` — sets `dog_waiting_floor` in the FSM, which is
+   broadcast in the next status update. The web UI shows a bouncing 🐕 at that
+   floor position on the shaft. The indicator clears automatically when the
+   elevator arrives at that floor, or when the pressure mat confirms the dog has
+   boarded.
+2. `fsm.cmd_go(floor)` — requests a move. Silently ignored if the elevator is
+   already at that floor or in motion, so repeated detections while the elevator
+   travels are harmless.
 
 ### Status payload fields
 
@@ -230,6 +239,7 @@ so repeated detections while the elevator travels are harmless.
 | `position` | int \| null | Steps from home (0 = ground floor) |
 | `kart_door` | string | `open`, `closed`, `unknown` (unknown = kart node not yet connected) |
 | `dog_present` | bool \| null | `true` = dog on pressure mat, `null` = kart node not yet connected |
+| `dog_waiting` | int \| null | `0` or `1` = floor where dog was last detected; `null` = no dog waiting |
 
 ---
 
