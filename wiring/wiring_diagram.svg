@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1150"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1280"
      font-family="'Courier New', Courier, monospace">
 
-<rect width="1400" height="1150" fill="#0f172a"/>
+<rect width="1400" height="1280" fill="#0f172a"/>
 
 <!-- TITLE -->
 <text x="700" y="28" text-anchor="middle" fill="#f1f5f9"
-      font-family="system-ui,sans-serif" font-size="16" font-weight="bold">Pet Elevator — Wiring Diagram v3</text>
+      font-family="system-ui,sans-serif" font-size="16" font-weight="bold">Pet Elevator — Wiring Diagram v4</text>
 <text x="700" y="46" text-anchor="middle" fill="#475569"
-      font-family="system-ui,sans-serif" font-size="10">Pi 4B · DM542T · NEMA 23 + 10:1 Gearbox · 24V DC  |  2× Pi Zero 2 W cameras + kart sensor node  |  All NC switches — HIGH = fault</text>
+      font-family="system-ui,sans-serif" font-size="10">Pi 4B · DM542T · NEMA 23 + 10:1 Gearbox · 24V DC  |  2× Pi Zero 2 W cameras + kart sensor node  |  Relay module + linear actuator for door</text>
 
 <!-- ═══ LEGEND ═══ -->
 <rect x="1060" y="58" width="318" height="272" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
@@ -81,35 +81,62 @@
 <text x="140" y="617" text-anchor="middle" fill="#475569" font-size="9">ELEVATOR_FLOOR=1</text>
 <text x="140" y="632" text-anchor="middle" fill="#475569" font-size="9">elevator/camera/floor1/detection</text>
 
-<!-- Pi Zero 2 W — Kart sensor node -->
-<rect x="40" y="668" width="200" height="110" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/>
+<!-- Pi Zero 2 W — Kart sensor node (height extended to 140 for relay GPIO lines) -->
+<rect x="40" y="668" width="200" height="140" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/>
 <text x="140" y="688" text-anchor="middle" fill="#22c55e" font-family="system-ui,sans-serif" font-size="11" font-weight="bold">Pi Zero 2 W  (Kart)</text>
 <text x="140" y="704" text-anchor="middle" fill="#94a3b8" font-size="10">Sensor node — no camera</text>
 <text x="140" y="719" text-anchor="middle" fill="#22c55e" font-size="9">5W solar + 18650 LiPo — no mains</text>
 <text x="140" y="734" text-anchor="middle" fill="#475569" font-size="9">GPIO17 ← Door switch (NC)</text>
 <text x="140" y="749" text-anchor="middle" fill="#475569" font-size="9">GPIO27 ← Pressure mat (NO)</text>
 <text x="140" y="764" text-anchor="middle" fill="#475569" font-size="9">elevator/kart/door · elevator/kart/pressure</text>
+<text x="140" y="779" text-anchor="middle" fill="#e879f9" font-size="9">GPIO5  → Relay IN1 (OPEN)</text>
+<text x="140" y="794" text-anchor="middle" fill="#e879f9" font-size="9">GPIO6  → Relay IN2 (CLOSE)</text>
 
-<!-- Door switch — external component wired to kart Pi Zero -->
-<rect x="40" y="800" width="130" height="56" rx="5" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,2"/>
-<text x="105" y="820" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="10" font-weight="bold">Door Switch</text>
-<text x="105" y="835" text-anchor="middle" fill="#94a3b8" font-size="9">NC microswitch</text>
-<text x="105" y="848" text-anchor="middle" fill="#475569" font-size="8">COM→GPIO17  NC→GND</text>
-<circle cx="170" cy="823" r="2.5" fill="#94a3b8"/>
+<!-- Door switch — external component wired to kart Pi Zero (shifted down 25px) -->
+<rect x="40" y="825" width="130" height="56" rx="5" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="105" y="845" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="10" font-weight="bold">Door Switch</text>
+<text x="105" y="860" text-anchor="middle" fill="#94a3b8" font-size="9">NC microswitch</text>
+<text x="105" y="873" text-anchor="middle" fill="#475569" font-size="8">COM→GPIO17  NC→GND</text>
+<circle cx="170" cy="848" r="2.5" fill="#94a3b8"/>
 
-<!-- Pressure mat — external component wired to kart Pi Zero -->
-<rect x="40" y="876" width="130" height="56" rx="5" fill="#1e293b" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,2"/>
-<text x="105" y="896" text-anchor="middle" fill="#22c55e" font-family="system-ui,sans-serif" font-size="10" font-weight="bold">Pressure Mat</text>
-<text x="105" y="911" text-anchor="middle" fill="#22c55e" font-size="9">NO contact pad</text>
-<text x="105" y="924" text-anchor="middle" fill="#475569" font-size="8">3.3V→mat→GPIO27</text>
-<circle cx="170" cy="899" r="2.5" fill="#22c55e"/>
+<!-- Pressure mat — external component wired to kart Pi Zero (shifted down 29px) -->
+<rect x="40" y="905" width="130" height="56" rx="5" fill="#1e293b" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="105" y="925" text-anchor="middle" fill="#22c55e" font-family="system-ui,sans-serif" font-size="10" font-weight="bold">Pressure Mat</text>
+<text x="105" y="940" text-anchor="middle" fill="#22c55e" font-size="9">NO contact pad</text>
+<text x="105" y="953" text-anchor="middle" fill="#475569" font-size="8">3.3V→mat→GPIO27</text>
+<circle cx="170" cy="928" r="2.5" fill="#22c55e"/>
+
+<!-- ── Relay Module ── -->
+<rect x="255" y="820" width="130" height="90" rx="5" fill="#1e293b" stroke="#e879f9" stroke-width="1.5"/>
+<text x="320" y="838" text-anchor="middle" fill="#e879f9" font-family="system-ui,sans-serif" font-size="10" font-weight="bold">RELAY MODULE (2ch)</text>
+<text x="320" y="852" text-anchor="middle" fill="#94a3b8" font-size="9">Active-LOW · 5V coil</text>
+<text x="320" y="865" text-anchor="middle" fill="#475569" font-size="8">IN1 ← GPIO5  (OPEN)</text>
+<text x="320" y="878" text-anchor="middle" fill="#475569" font-size="8">IN2 ← GPIO6  (CLOSE)</text>
+<text x="320" y="891" text-anchor="middle" fill="#475569" font-size="8">COM/NO → actuator (rev. polarity)</text>
+<text x="320" y="904" text-anchor="middle" fill="#f97316" font-size="8">12V supply to relay COM rails</text>
+
+<!-- ── Linear Actuator ── -->
+<rect x="255" y="928" width="130" height="60" rx="5" fill="#1e293b" stroke="#e879f9" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="320" y="946" text-anchor="middle" fill="#e879f9" font-family="system-ui,sans-serif" font-size="10" font-weight="bold">LINEAR ACTUATOR</text>
+<text x="320" y="960" text-anchor="middle" fill="#94a3b8" font-size="9">12V DC</text>
+<text x="320" y="974" text-anchor="middle" fill="#475569" font-size="8">Adjust STROKE_TIME to travel</text>
+<text x="320" y="983" text-anchor="middle" fill="#475569" font-size="8">Relays never both ON (software)</text>
 
 <!-- Wires: door switch → kart Pi Zero GPIO17 -->
-<polyline points="170,823  190,823  190,734  240,734"
+<polyline points="170,848  190,848  190,734  240,734"
           fill="none" stroke="#94a3b8" stroke-width="1.5"/>
 <!-- Wires: pressure mat → kart Pi Zero GPIO27 -->
-<polyline points="170,899  195,899  195,749  240,749"
+<polyline points="170,928  195,928  195,749  240,749"
           fill="none" stroke="#22c55e" stroke-width="1.5"/>
+
+<!-- Wires: kart Pi Zero GPIO5/6 → relay module IN1/IN2 -->
+<polyline points="240,779  248,779  248,853  255,853"
+          fill="none" stroke="#e879f9" stroke-width="1.5"/>
+<polyline points="240,794  249,794  249,871  255,871"
+          fill="none" stroke="#e879f9" stroke-width="1.5"/>
+
+<!-- Wire: relay module → linear actuator -->
+<line x1="320" y1="910" x2="320" y2="928" stroke="#e879f9" stroke-width="1.5"/>
 
 <!-- WiFi/MQTT arrows — landing cameras -->
 <line x1="240" y1="505" x2="378" y2="505" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,3"/>
@@ -244,10 +271,10 @@
 <polyline points="205,322  300,322  300,278  380,278"
           fill="none" stroke="#94a3b8" stroke-width="2"/>
 
-<!-- NC terminals → GND bus (dashed, drops to y=1045) -->
-<line x1="122" y1="156" x2="122" y2="1045" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
-<line x1="112" y1="256" x2="112" y2="1045" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
-<line x1="102" y1="356" x2="102" y2="1045" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+<!-- NC terminals → GND bus (dashed, drops to y=1175) -->
+<line x1="122" y1="156" x2="122" y2="1175" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+<line x1="112" y1="256" x2="112" y2="1175" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+<line x1="102" y1="356" x2="102" y2="1175" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
 
 <!-- Stepper outputs: Pi 4B right-side → DM542T left-side -->
 <polyline points="628,368  714,368  714,145  800,145"
@@ -273,11 +300,11 @@
 <text x="1068" y="440" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="bold">24V</text>
 
 <!-- DM542T GND → GND bus -->
-<polyline points="1015,173  1058,173  1058,1045"
+<polyline points="1015,173  1058,173  1058,1175"
           fill="none" stroke="#475569" stroke-width="2"/>
 
 <!-- 24V PSU GND → GND bus -->
-<polyline points="1015,762  1064,762  1064,1045  800,1045"
+<polyline points="1015,762  1064,762  1064,1175  800,1175"
           fill="none" stroke="#475569" stroke-width="2.5"/>
 
 <!-- Motor coils: DM542T right → NEMA23 left -->
@@ -294,27 +321,27 @@
 <line x1="240" y1="413" x2="378" y2="413" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="8,4"/>
 <text x="305" y="407" text-anchor="middle" fill="#f59e0b" font-family="system-ui,sans-serif" font-size="9" font-style="italic">WiFi · HTTP :8080 →</text>
 
-<!-- GND bus (y=1045) -->
-<line x1="40" y1="1045" x2="1064" y2="1045" stroke="#475569" stroke-width="2.5"/>
-<text x="540" y="1063" text-anchor="middle" fill="#475569"
+<!-- GND bus (y=1175) -->
+<line x1="40" y1="1175" x2="1064" y2="1175" stroke="#475569" stroke-width="2.5"/>
+<text x="540" y="1193" text-anchor="middle" fill="#475569"
       font-family="system-ui,sans-serif" font-size="10">── SYSTEM GND BUS — common to Pi 4B · DM542T · 24V PSU ──</text>
 
 <!-- ═══ NOTES PANEL ═══ -->
-<rect x="40" y="955" width="730" height="78" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-<text x="405" y="974" text-anchor="middle" fill="#94a3b8"
+<rect x="40" y="1085" width="730" height="78" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="405" y="1104" text-anchor="middle" fill="#94a3b8"
       font-family="system-ui,sans-serif" font-size="11" font-weight="bold">IMPORTANT NOTES</text>
 
-<text x="56" y="993" fill="#f97316" font-size="11">⚠</text>
-<text x="72" y="993" fill="#f1f5f9" font-size="10">All Pi 4B safety switches NC to GND — pin HIGH = fault or broken wire = STOP</text>
+<text x="56" y="1123" fill="#f97316" font-size="11">⚠</text>
+<text x="72" y="1123" fill="#f1f5f9" font-size="10">All Pi 4B safety switches NC to GND — pin HIGH = fault or broken wire = STOP</text>
 
-<text x="56" y="1009" fill="#f97316" font-size="11">⚠</text>
-<text x="72" y="1009" fill="#f1f5f9" font-size="10">100µF 50V cap mandatory across DM542T V+/GND — prevents back-EMF spike</text>
+<text x="56" y="1139" fill="#f97316" font-size="11">⚠</text>
+<text x="72" y="1139" fill="#f1f5f9" font-size="10">100µF 50V cap mandatory across DM542T V+/GND — prevents back-EMF spike</text>
 
-<text x="56" y="1025" fill="#3b82f6" font-size="11">ℹ</text>
-<text x="72" y="1025" fill="#f1f5f9" font-size="10">Kart door NC switch: open during transit → immediate motor stop + FAULT state</text>
+<text x="56" y="1155" fill="#3b82f6" font-size="11">ℹ</text>
+<text x="72" y="1155" fill="#f1f5f9" font-size="10">Kart door NC switch: open during transit → immediate motor stop + FAULT state</text>
 
 <!-- ═══ NOTES PANEL 2 ═══ -->
-<rect x="780" y="820" width="258" height="115" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<rect x="780" y="820" width="258" height="145" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
 <text x="909" y="839" text-anchor="middle" fill="#94a3b8"
       font-family="system-ui,sans-serif" font-size="11" font-weight="bold">ADDITIONAL NOTES</text>
 <text x="796" y="858" fill="#3b82f6" font-size="11">ℹ</text>
@@ -326,5 +353,8 @@
 <text x="812" y="905" fill="#f1f5f9" font-size="10">Kart Pi Zero 2 W: solar powered, no mains</text>
 <text x="796" y="922" fill="#3b82f6" font-size="11">ℹ</text>
 <text x="812" y="922" fill="#f1f5f9" font-size="10">Landing Pi Zero 2 W: 5V micro-USB each</text>
+<text x="796" y="939" fill="#e879f9" font-size="11">ℹ</text>
+<text x="812" y="939" fill="#f1f5f9" font-size="10">Linear actuator: 12V separate supply on kart</text>
+<text x="812" y="952" fill="#475569" font-size="9">  Relay GPIO5/6 are kart Pi Zero pins only</text>
 
 </svg>

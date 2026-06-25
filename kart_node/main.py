@@ -24,6 +24,7 @@ import json
 import logging
 import signal
 import sys
+import threading
 import time
 
 import RPi.GPIO as GPIO
@@ -41,6 +42,8 @@ logger = logging.getLogger(__name__)
 class KartNode:
     def __init__(self) -> None:
         self._mqtt = self._init_mqtt()
+        self._board_timer: threading.Timer | None = None
+        self._board_timer_lock = threading.Lock()
 
     # ------------------------------------------------------------------ #
     # Lifecycle                                                            #
@@ -74,6 +77,9 @@ class KartNode:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(config.DOOR_PIN,     GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(config.PRESSURE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        # Relay outputs: active-LOW module, so initial=HIGH keeps relays off at boot.
+        GPIO.setup(config.DOOR_RELAY_OPEN_PIN,  GPIO.OUT, initial=GPIO.HIGH)
+        GPIO.setup(config.DOOR_RELAY_CLOSE_PIN, GPIO.OUT, initial=GPIO.HIGH)
         GPIO.add_event_detect(
             config.DOOR_PIN, GPIO.BOTH,
             callback=self._on_door_change, bouncetime=50,
@@ -96,15 +102,37 @@ class KartNode:
 
     def _on_pressure_change(self, channel: int) -> None:
         present = self._read_pressure()
-        logger.info("Pressure mat → dog_present=%s", present)
-        self._publish_pressure(present)
+        logger.info("Pressure mat → dog_present=%s (raw)", present)
+        with self._board_timer_lock:
+            if self._board_timer is not None:
+                self._board_timer.cancel()
+                self._board_timer = None
+        if present:
+            # Start settle timer — only publish "aboard" if mat stays held
+            with self._board_timer_lock:
+                self._board_timer = threading.Timer(
+                    config.DOG_BOARD_SETTLE_TIME, self._confirm_boarded,
+                )
+                self._board_timer.daemon = True
+                self._board_timer.start()
+            logger.info("Pressure mat held — confirming in %.1fs", config.DOG_BOARD_SETTLE_TIME)
+        else:
+            self._publish_pressure(False)
+
+    def _confirm_boarded(self) -> None:
+        with self._board_timer_lock:
+            self._board_timer = None
+        if self._read_pressure():
+            logger.info("Dog fully aboard (settle complete)")
+            self._publish_pressure(True)
+        else:
+            logger.info("Pressure mat released during settle — ignoring")
 
     # ------------------------------------------------------------------ #
     # MQTT                                                                 #
     # ------------------------------------------------------------------ #
 
-    @staticmethod
-    def _init_mqtt() -> mqtt.Client:
+    def _init_mqtt(self) -> mqtt.Client:
         client = mqtt.Client(client_id="elevator-kart", clean_session=True)
         client.on_connect    = lambda c, u, f, rc: (
             logger.info("MQTT connected to %s (rc=%d)", config.MQTT_BROKER, rc),
@@ -113,11 +141,10 @@ class KartNode:
         client.on_disconnect = lambda c, u, rc: logger.warning(
             "MQTT disconnected (rc=%d)", rc
         )
-        client.on_message = KartNode._on_mqtt_message
+        client.on_message = self._on_mqtt_message
         return client
 
-    @staticmethod
-    def _on_mqtt_message(client, userdata, msg) -> None:
+    def _on_mqtt_message(self, client, userdata, msg) -> None:
         try:
             payload = json.loads(msg.payload)
         except (json.JSONDecodeError, UnicodeDecodeError):
@@ -130,8 +157,16 @@ class KartNode:
                 logger.warning("Unknown door command action: %r", action)
                 return
             logger.info("Door command received: %s", action)
-            # TODO: actuate door motor/servo on GPIO when hardware is fitted
-            # e.g. GPIO.output(config.DOOR_ACTUATOR_PIN, GPIO.HIGH if action == "open" else GPIO.LOW)
+            threading.Thread(target=self._actuate_door, args=(action,), daemon=True).start()
+
+    def _actuate_door(self, action: str) -> None:
+        drive_pin = config.DOOR_RELAY_OPEN_PIN  if action == "open"  else config.DOOR_RELAY_CLOSE_PIN
+        guard_pin = config.DOOR_RELAY_CLOSE_PIN if action == "open"  else config.DOOR_RELAY_OPEN_PIN
+        GPIO.output(guard_pin, GPIO.HIGH)  # de-energise other relay first (active-LOW: HIGH = off)
+        GPIO.output(drive_pin, GPIO.LOW)   # energise drive relay (active-LOW: LOW = on)
+        time.sleep(config.DOOR_ACTUATOR_STROKE_TIME)
+        GPIO.output(drive_pin, GPIO.HIGH)  # de-energise when stroke complete
+        logger.info("Door actuator %s complete", action)
 
     def _publish_door(self, status: str) -> None:
         payload = json.dumps({"status": status})
