@@ -2,7 +2,7 @@
 
 A two-floor cable-winch lift for an ageing dog with mobility difficulties.
 
-A Raspberry Pi 4 drives a NEMA 23 stepper motor via a DM542T driver. Two Pi Zero 2 W camera nodes watch each landing and call the elevator automatically when the dog is detected. Everything is controllable from a browser on the home network.
+A Raspberry Pi 4B drives a NEMA 23 stepper motor via a DM542T driver. A single Pi Zero 2 W mounted on the elevator kart — powered by an onboard solar panel and LiPo battery — detects the dog and calls the elevator automatically. Everything is controllable from a browser on the home network.
 
 ![Web UI](docs/web_ui_screenshot.png)
 
@@ -12,12 +12,13 @@ A Raspberry Pi 4 drives a NEMA 23 stepper motor via a DM542T driver. Two Pi Zero
 
 | Component | Part |
 |-----------|------|
-| Controller | Raspberry Pi 4 |
+| Controller | Raspberry Pi 4B |
 | Motor | NEMA 23, 3 N·m |
 | Driver | DM542T (1/16 microstep, 24 V) |
 | Gearbox | 10:1 worm gear (self-locking) |
 | Drum | 75 mm diameter |
-| Camera nodes | Raspberry Pi Zero 2 W × 2 + CSI camera |
+| Camera node | Raspberry Pi Zero 2 W + CSI camera (on kart) |
+| Kart power | 5W solar panel + 18650 LiPo + MPPT controller |
 | Safety inputs | 2× NC limit switches, NC latching e-stop |
 
 Full wiring diagram: [`wiring/wiring_diagram.svg`](wiring/wiring_diagram.svg)
@@ -63,7 +64,7 @@ http://pet-elevator.local:8080
 
 ---
 
-### Pi Zero 2 W — Camera Node (repeat for each unit)
+### Pi Zero 2 W — Kart Camera Node
 
 ```bash
 # 1. Enable camera
@@ -83,10 +84,9 @@ unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
       detect.tflite labelmap.txt \
       -d /home/pi/pet-elevator/camera_node/models/
 
-# 4. Set floor identity
+# 4. Configure broker address
 sudo cp /home/pi/pet-elevator/deploy/elevator-camera.env /etc/default/elevator-camera
 sudo nano /etc/default/elevator-camera
-# Set ELEVATOR_FLOOR=0 (ground) or 1 (upper)
 # Set ELEVATOR_BROKER=pet-elevator.local
 
 # 5. Install and start the service
@@ -99,7 +99,7 @@ sudo systemctl enable --now elevator-camera
 
 ## MQTT API
 
-All messages are JSON. Broker runs on the Pi 4 (port 1883).
+All messages are JSON. Broker runs on the Pi 4B (port 1883).
 
 | Topic | Direction | Example payload |
 |-------|-----------|-----------------|
@@ -108,7 +108,7 @@ All messages are JSON. Broker runs on the Pi 4 (port 1883).
 | `elevator/command` | → controller | `{"action": "estop"}` |
 | `elevator/command` | → controller | `{"action": "reset"}` |
 | `elevator/status` | ← controller | `{"state": "idle", "floor": 1, "position": 413906}` |
-| `elevator/camera/floor0/detection` | ← camera node | `{"score": 0.91, "floor": 0}` |
+| `elevator/camera/kart/detection` | ← kart camera | `{"score": 0.91, "floor": 0}` |
 
 Send a command from any machine on the network:
 
@@ -123,7 +123,7 @@ mosquitto_pub -h pet-elevator.local -t elevator/command \
 
 ```
 pet-elevator/
-├── controller/          # Pi 4 — motor, FSM, MQTT, web UI
+├── controller/          # Pi 4B — motor, FSM, MQTT, web UI
 │   ├── config.py        # GPIO pins, speeds, MQTT settings
 │   ├── motor.py         # DMA stepper control (pigpio waves)
 │   ├── safety.py        # NC switch callbacks
@@ -133,7 +133,7 @@ pet-elevator/
 │   ├── templates/
 │   │   └── index.html   # Mobile-friendly control interface
 │   └── main.py          # Entry point
-├── camera_node/         # Pi Zero 2 W — TFLite dog detection
+├── camera_node/         # Pi Zero 2 W (kart, solar-powered) — TFLite dog detection
 │   ├── config.py
 │   ├── detector.py
 │   └── main.py
